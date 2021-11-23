@@ -1,35 +1,31 @@
-import logo from './logo.svg';
-import {BrowserRouter as Router,
+import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import ContentLogin from "./Componentes/ContentLogin";
+import SinAutorizacion from "./Componentes/SinAutorizacion";
+import Home from "./Componentes/Home";
+import Error from "./Componentes/Error";
+import "./App.css";
+import {
+  BrowserRouter as Router,
   Switch,
   Redirect,
-  Route,} from "react-router-dom";
-import './App.css';
-
+  Route,
+} from "react-router-dom";
 function App() {
   return (
-<div className="App">
+    <div className="App">
       <Router>
         <Switch>
           <Route path="/" exact>
             <ContentLogin />
-            <Header />
           </Route>
 
           <Route
             path="/home"
             render={() => {
-              if (estado === "Autorizado") {
-                return (
-                  <div>
-                    <Header />
-                    <ContentHome />
-                  </div>
-                );
-              } else {
-                return <Redirect to="/SinAutorizacion" />;
-              }
+              return <Home />;
             }}
           />
+
           <Route path="/SinAutorizacion" exact>
             <SinAutorizacion />
           </Route>
@@ -37,6 +33,7 @@ function App() {
           <Route path="/error" exact>
             <Error />
           </Route>
+
           <Redirect to="/error" />
         </Switch>
       </Router>
