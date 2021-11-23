@@ -1,23 +1,45 @@
 import logo from './logo.svg';
+import {BrowserRouter as Router,
+  Switch,
+  Redirect,
+  Route,} from "react-router-dom";
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+<div className="App">
+      <Router>
+        <Switch>
+          <Route path="/" exact>
+            <ContentLogin />
+            <Header />
+          </Route>
+
+          <Route
+            path="/home"
+            render={() => {
+              if (estado === "Autorizado") {
+                return (
+                  <div>
+                    <Header />
+                    <ContentHome />
+                  </div>
+                );
+              } else {
+                return <Redirect to="/SinAutorizacion" />;
+              }
+            }}
+          />
+          <Route path="/SinAutorizacion" exact>
+            <SinAutorizacion />
+          </Route>
+
+          <Route path="/error" exact>
+            <Error />
+          </Route>
+          <Redirect to="/error" />
+        </Switch>
+      </Router>
     </div>
   );
 }
