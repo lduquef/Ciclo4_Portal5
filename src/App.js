@@ -1,8 +1,8 @@
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
-import ContentLogin from "./Componentes/ContentLogin";
-import SinAutorizacion from "./Componentes/SinAutorizacion";
-import Home from "./Componentes/Home";
-import Error from "./Componentes/Error";
+import ContentLogin from "./componentes/ContentLogin";
+import SinAutorizacion from "./componentes/SinAutorizacion";
+import Home from "./componentes/Home";
+import Error from "./componentes/Error";
 import "./App.css";
 import {
   BrowserRouter as Router,
