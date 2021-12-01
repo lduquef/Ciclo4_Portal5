@@ -1,6 +1,16 @@
-import { Container, Navbar, Nav, NavDropdown } from "react-bootstrap";
+import { Container, Navbar, Nav, NavDropdown, Button } from "react-bootstrap";
 import userLogo from "../img/userLogo.svg";
+import auth from "../img/auth.svg";
+import { useHistory } from "react-router-dom";
+
 const Menu = () => {
+  const history = useHistory();
+
+  function handleClick(val) {
+    if (val === "auth") history.push("/");
+    if (val === "user") history.push("/usuarioActualizar");
+  }
+
   return (
     <div className="justify-content-center">
       <Navbar
@@ -14,7 +24,7 @@ const Menu = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               <Nav.Link href="/home">Inicio</Nav.Link>
-              <Nav.Link href="/usuarios">Usuarios</Nav.Link>
+              <Nav.Link href="/listarUsuarios">Usuarios</Nav.Link>
               <NavDropdown title="Proyectos" id="basic-nav-dropdown">
                 <NavDropdown.Item href="/crearSolicitud">
                   Crear Solicitud
@@ -25,9 +35,17 @@ const Menu = () => {
               </NavDropdown>
             </Nav>
           </Navbar.Collapse>
+
           <div>
-            <img src={userLogo} alt="" width="40" height="40" />
-            <h5>Actualizar perfil</h5>
+            <Button variant="contained" onClick={() => handleClick("user")}>
+              <img src={userLogo} alt="" width="40" height="40" />
+            </Button>
+          </div>
+          <div>|</div>
+          <div>
+            <Button variant="contained" onClick={() => handleClick("auth")}>
+              <img src={auth} alt="" width="40" height="40" />
+            </Button>
           </div>
         </Container>
       </Navbar>
