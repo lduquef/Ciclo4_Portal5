@@ -1,4 +1,13 @@
-import { Container, Col, Row, Form, Button, Modal } from "react-bootstrap";
+import {
+  Container,
+  Col,
+  Row,
+  Form,
+  Button,
+  Modal,
+  InputGroup,
+  FormControl,
+} from "react-bootstrap";
 
 import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
@@ -29,8 +38,9 @@ const ListarProyectos = () => {
   ///////////////////////////////////////////////////////////////////////////////////////////
   //QUERYS
   //////////////////////////////////////////////////////////////////////////////////////////
-  const consultaListaProyectos = JSON.stringify({
-    query: `
+  const consultaListaProyectos = () => {
+    return JSON.stringify({
+      query: `
       query listarProyectos {
         listarProyectos {
           _id
@@ -50,10 +60,12 @@ const ListarProyectos = () => {
         }
       }
     `,
-  });
+    });
+  };
 
-  const consultaProyectoSel = JSON.stringify({
-    query: `
+  const consultaProyectoSel = (id) => {
+    return JSON.stringify({
+      query: `
     query ConsultarProyecto($consultarProyectoId: ID!) {
       consultarProyecto(id: $consultarProyectoId) {
         _id
@@ -73,12 +85,16 @@ const ListarProyectos = () => {
       }
     }
     `,
-    variables: `
+      variables:
+        `
     {
-      "consultarProyectoId": "61a542e05d0eb3a6b541f79f"
+      "consultarProyectoId": "` +
+        id +
+        `"
     }
     `,
-  });
+    });
+  };
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //FUNCIONES
@@ -93,7 +109,7 @@ const ListarProyectos = () => {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: consultaListaProyectos,
+        body: consultaListaProyectos(),
       };
       const response = await fetch("http://localhost:4000/graphql", config);
 
@@ -118,7 +134,7 @@ const ListarProyectos = () => {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: consultaProyectoSel,
+        body: consultaProyectoSel(e.target.id),
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
@@ -131,6 +147,11 @@ const ListarProyectos = () => {
     }
     fetchData();
     handleShowActualizar();
+  };
+
+  //Función para registrar cambio en los campos del formulario
+  const handleChange = (event) => {
+    setProyectoSel({ ...proyectoSel, [event.target.name]: event.target.value });
   };
 
   // Return de componente a renderizar
@@ -167,8 +188,11 @@ const ListarProyectos = () => {
                               <th scope="row">{index + 1}</th>
                               <td>{proyecto.nombre}</td>
                               <td>
-                                {proyecto.lider ? proyecto.lider.nombre : ""}
-                                {proyecto.lider ? proyecto.lider.apellido : ""}
+                                {proyecto.lider
+                                  ? proyecto.lider.nombre +
+                                    " " +
+                                    proyecto.lider.apellido
+                                  : ""}
                               </td>
                               <td>{proyecto.fase}</td>
                               <td>{proyecto.estado}</td>
@@ -239,17 +263,32 @@ const ListarProyectos = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-10">
               <Form.Label>Proyecto</Form.Label>
-              <Form.Control type="text" placeholder={proyectoSel.nombre} />
+              <Form.Control
+                type="text"
+                value={proyectoSel.nombre}
+                name="nombre"
+                onChange={handleChange}
+              />
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-10">
               <Form.Label>lider</Form.Label>
-              <Form.Control type="text" placeholder={null} readOnly />
+              <Form.Control
+                type="text"
+                placeholder={
+                  proyectoSel.lider
+                    ? proyectoSel.lider.nombre +
+                      " " +
+                      proyectoSel.lider.apellido
+                    : ""
+                }
+                readOnly
+              />
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-10">
               <Form.Label>Estado</Form.Label>
               <Form.Select size="lg" value={proyectoSel.estado} onChange={null}>
                 <option>ACTIVO</option>
@@ -266,12 +305,47 @@ const ListarProyectos = () => {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-10">
+              <Form.Label>Fecha Inicio</Form.Label>
+              <Form.Control
+                type="date"
+                value={proyectoSel.fechaInicio}
+                readOnly
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-10">
               <Form.Label>Presupesto</Form.Label>
               <Form.Control
                 type="Number"
-                placeholder={proyectoSel.presupuesto}
+                value={proyectoSel.presupuesto}
+                name="presupuesto"
+                onChange={handleChange}
               />
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <InputGroup>
+                <InputGroup.Text>Objetivos generales</InputGroup.Text>
+                <FormControl
+                  as="textarea"
+                  value={proyectoSel.objetivosGenerales}
+                  name="objetivosGenerales"
+                  onChange={handleChange}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <InputGroup>
+                <InputGroup.Text>Objetivos específicos</InputGroup.Text>
+                <FormControl
+                  as="textarea"
+                  value={proyectoSel.objetivosEspecificos}
+                  name="objetivosEspecificos"
+                  onChange={handleChange}
+                />
+              </InputGroup>
             </Form.Group>
           </Form>
         </Modal.Body>
