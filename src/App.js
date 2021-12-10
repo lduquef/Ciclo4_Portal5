@@ -29,7 +29,15 @@ function App() {
             path="/home"
             exact
             render={() => {
-              return <Home />;
+              if (localStorage.getItem("estado") === "AUTORIZADO") {
+                return (
+                  <div>
+                    <Home />
+                  </div>
+                );
+              } else {
+                return <Redirect to="/SinAutorizacion" />;
+              }
             }}
           />
 

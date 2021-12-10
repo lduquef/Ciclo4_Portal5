@@ -7,7 +7,14 @@ const Menu = () => {
   const history = useHistory();
 
   function handleClick(val) {
-    if (val === "auth") history.push("/");
+    if (val === "diauth") {
+      localStorage.removeItem("estado");
+      localStorage.removeItem("rol");
+      localStorage.removeItem("nombreUsuario");
+      localStorage.removeItem("apellidoUsuario");
+
+      history.push("/");
+    }
     if (val === "user") history.push("/usuarioActualizar");
   }
 
@@ -43,7 +50,7 @@ const Menu = () => {
           </div>
           <div>|</div>
           <div>
-            <Button variant="contained" onClick={() => handleClick("auth")}>
+            <Button variant="contained" onClick={() => handleClick("diauth")}>
               <img src={auth} alt="" width="40" height="40" />
             </Button>
           </div>
