@@ -45,12 +45,16 @@ function App() {
             path="/usuarioRegistro"
             exact
             render={() => {
-              return (
-                <div>
-                  <Menu />
-                  <UsuarioRegistro />
-                </div>
-              );
+              if (localStorage.getItem("estado") === "AUTORIZADO") {
+                return (
+                  <div>
+                    <Menu />
+                    <UsuarioRegistro />
+                  </div>
+                );
+              } else {
+                return <Redirect to="/SinAutorizacion" />;
+              }
             }}
           />
 
