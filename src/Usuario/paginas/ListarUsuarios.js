@@ -1,5 +1,5 @@
 import { Container, Col, Row, Form, Button, Modal } from "react-bootstrap";
-import React, { useState } from "react";
+import React, { useState ,useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
@@ -27,9 +27,47 @@ const ListarUsuarios = () => {
   ];
 
   //hooks para actualizar lista de usuarios, usuario seleccionado
-  const [usuarios] = useState(datosPrueba);
+  const [Usuarios,setUsuario] = useState([]);
   // const [usuarioSel, setusuarioSel] = useState([]);
+  const queryListaUsuarios = () => {
+    return JSON.stringify({
+      query: `
+      query ListarUsuarios {
+        listarUsuarios {
+          _id
+          nombre
+          apellido
+          identificacion
+          correo
+          estado
+          rol
+        }
+      }
+    `,
+    });
+  };
+  useEffect(() => {
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: queryListaUsuarios(),
+      };
+      const response = await fetch("http://localhost:4000/graphql", config);
 
+      const data = await response.json();
+      if (data) {
+        console.log(data.data.listarUsuarios)
+        setUsuario(data.data.listarUsuarios);
+      } else {
+        alert("Sin resultados");
+      }
+    }
+    if (Usuarios.length === 0) fetchData();
+  });
   // funciones visibilidad de las pantallas modales
   const [showActualizar, setShowActualizar] = useState(false);
   const [showVisualizar, setShowVisualizar] = useState(false);
@@ -74,7 +112,7 @@ const ListarUsuarios = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {usuarios.map((usuario, index) => {
+                        {Usuarios.map((usuario, index) => {
                           return (
                             <tr key={index + 1}>
                               <th scope="row">{index + 1}</th>
@@ -169,7 +207,24 @@ const ListarUsuarios = () => {
           <Modal.Title>Visualizar usuario</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form></Form>
+          <Form>
+          {Usuarios.map((usuario, index) => {
+                          return (
+                            <tr key={index + 1}>
+                              <th scope="row">{index + 1}</th>
+                              <td>{usuario.nombre}</td>
+                              <td>{usuario.apellido}</td>
+                              <td>{usuario.correo}</td>
+                              <td>{usuario.identificacion}</td>
+                              <td>{usuario.rol}</td>
+                              <td>{usuario.estado}</td>
+                              <td>
+
+                              </td>
+                            </tr>
+                          );
+                        })}
+          </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseVisualizar}>
