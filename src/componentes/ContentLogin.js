@@ -1,25 +1,21 @@
-import { Form } from "react-bootstrap";
+import { Form, Button } from "react-bootstrap";
 import logo from "../img/proLogo.jpg";
 import { useHistory } from "react-router-dom";
 import { useState } from "react";
+import Swal from "sweetalert2";
 
 const Content = () => {
   const history = useHistory();
 
   //Hook para contener los datos del login
   const [usuario, setUsuario] = useState({
-    email: "",
+    correo: "",
     pass: "",
   });
 
   //Función para registrar cambio en los campos del formulario
   const handleChange = (event) => {
-    setUsuario({ usuario, [event.target.name]: event.target.value });
-  };
-
-  const autenticar = () => {
-    localStorage.setItem("nombreUsuario", usuario.email);
-    history.push("/home");
+    setUsuario({ ...usuario, [event.target.name]: event.target.value });
   };
 
   const registro = () => {
@@ -27,6 +23,92 @@ const Content = () => {
   };
 
   localStorage.removeItem("user"); //retira cualquier variable de autenticación de usuario que exista
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //QUERYS
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  const queryValidarUsuario = (email, pass) => {
+    return JSON.stringify({
+      query: `
+      query ValidarUsuario($correo: String!, $contrasena: String!) {
+        validarUsuario(correo: $correo, contrasena: $contrasena) {
+        _id
+        nombre
+        apellido
+        identificacion
+        correo
+        rol
+        estado  
+        }
+      }
+    `,
+      variables:
+        `
+        {  "correo": "` +
+        email +
+        `",
+        "contrasena": "` +
+        pass +
+        `"
+      }
+    `,
+    });
+  };
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //FUNCIONES
+  //////////////////////////////////////////////////////////////////////////////////////////
+  const autenticar = () => {
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: queryValidarUsuario(usuario.correo, usuario.pass),
+      };
+
+      const response = await fetch("http://localhost:4000/graphql", config);
+      const data = await response.json();
+      console.log(data);
+      if (data.data.validarUsuario) {
+        localStorage.setItem("estado", data.data.validarUsuario.estado);
+        localStorage.setItem("rol", data.data.validarUsuario.rol);
+        localStorage.setItem("nombreUsuario", data.data.validarUsuario.nombre);
+        localStorage.setItem(
+          "apellidoUsuario",
+          data.data.validarUsuario.apellido
+        );
+
+        popupExitoso("Bienvenido");
+        setTimeout(function () {
+          history.push("/home");
+        }, 3000);
+      } else {
+        popupFallido("correo o contraseña incorrectos");
+      }
+    }
+    fetchData();
+  };
+
+  //Funciones para generar popup confirmación de exito o falla de operación
+  const popupExitoso = (msg) => {
+    Swal.fire({
+      title: "Operación Exitosa",
+      text: msg,
+      type: "success",
+    });
+  };
+
+  const popupFallido = (msg) => {
+    Swal.fire({
+      title: "Operación fallida",
+      text: msg,
+      type: "warning",
+    });
+  };
 
   return (
     <div>
@@ -41,10 +123,10 @@ const Content = () => {
           <div className="form-group mt-3">
             <label>Correo electrónico</label>
             <input
-              type="email"
+              type="text"
               className="form-control"
-              placeholder="Ingrese email"
-              name="email"
+              placeholder="Ingrese su email"
+              name="correo"
               onChange={handleChange}
               required
             />
@@ -55,7 +137,7 @@ const Content = () => {
             <input
               type="password"
               className="form-control"
-              placeholder="Ingrese constraseña"
+              placeholder="Ingrese contraseña"
               name="pass"
               onChange={handleChange}
               required
@@ -65,23 +147,23 @@ const Content = () => {
           <div className="form-group mt-5" />
 
           <div className="form-group mt-2">
-            <button
-              type="submit"
-              className="btn btn-primary btn-block"
+            <Button
+              type="button"
+              className="btn btn-primary"
               onClick={autenticar}
             >
               Iniciar sesión
-            </button>
+            </Button>
           </div>
 
           <div className="form-group mt-2">
-            <button
-              type="submit"
-              className="btn btn-primary btn-block"
+            <Button
+              type="button"
+              className="btn btn-primary"
               onClick={registro}
             >
               Registro
-            </button>
+            </Button>
           </div>
         </Form>
       </div>

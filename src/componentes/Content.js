@@ -5,7 +5,11 @@ import { useHistory } from "react-router-dom";
 
 const Content = () => {
   const history = useHistory();
-  const saludo = localStorage.getItem("nombreUsuario");
+  const saludo = (
+    localStorage.getItem("nombreUsuario") +
+    " " +
+    localStorage.getItem("apellidoUsuario")
+  ).toUpperCase();
 
   const gestionProyectos = () => {
     history.push("/listarProyectos");
