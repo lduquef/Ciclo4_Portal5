@@ -1,38 +1,23 @@
-import { Container, Col, Row, Form, Button, Modal } from "react-bootstrap";
-import React, { useState } from "react";
+import {
+  Container,
+  Col,
+  Row,
+  Form,
+  Button,
+  Modal,
+  InputGroup,
+  FormControl,
+} from "react-bootstrap";
+
+import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
 
 const ListarProyectos = () => {
-  const datosPrueba = [
-    {
-      nombre: "proyectoCamilo44",
-      lider: {
-        nombre: "Camilo",
-        apellido: "Pinto",
-      },
-      fase: "INICIADO",
-      estado: "INACTIVO",
-      fechaInicio: null,
-      presupuesto: 435234,
-    },
-    {
-      nombre: "proyectoCamilo MODIFICADO",
-      lider: {
-        nombre: "maribel",
-        apellido: "valencia",
-      },
-      fase: "EN_DESARROLLO",
-      estado: "ACTIVO",
-      fechaInicio: "2021-01-12T05:00:00.000Z",
-      presupuesto: 200000000,
-    },
-  ];
-
   //hooks para actualizar lista de proyectos, proyecto seleccionado
-  const [proyectos] = useState(datosPrueba);
-  // const [proyectosel, setProyectosel] = useState([]);
+  const [proyectos, setProyectos] = useState([]);
+  const [proyectoSel, setProyectoSel] = useState([]);
 
   // funciones visibilidad de las pantallas modales
   const [showActualizar, setShowActualizar] = useState(false);
@@ -48,6 +33,125 @@ const ListarProyectos = () => {
   };
   const handleCloseVisualizar = () => {
     setShowVisualizar(false);
+  };
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //QUERYS
+  //////////////////////////////////////////////////////////////////////////////////////////
+  const consultaListaProyectos = () => {
+    return JSON.stringify({
+      query: `
+      query listarProyectos {
+        listarProyectos {
+          _id
+          nombre
+          presupuesto
+          fechaInicio
+          fechaFin
+          estado
+          fase
+          objetivosGenerales
+          objetivosEspecificos
+          apruebaCreacion
+          lider {
+            nombre
+            apellido
+          }
+        }
+      }
+    `,
+    });
+  };
+
+  const consultaProyectoSel = (id) => {
+    return JSON.stringify({
+      query: `
+    query ConsultarProyecto($consultarProyectoId: ID!) {
+      consultarProyecto(id: $consultarProyectoId) {
+        _id
+        nombre
+        presupuesto
+        fechaInicio
+        fechaFin
+        estado
+        fase
+        lider {
+          nombre
+          apellido
+        }
+        objetivosGenerales
+        objetivosEspecificos
+        apruebaCreacion
+      }
+    }
+    `,
+      variables:
+        `
+    {
+      "consultarProyectoId": "` +
+        id +
+        `"
+    }
+    `,
+    });
+  };
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //FUNCIONES
+  //////////////////////////////////////////////////////////////////////////////////////////
+
+  //Evento Hook que permite el cargue inicial de los proyectos en pantalla
+  useEffect(() => {
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: consultaListaProyectos(),
+      };
+      const response = await fetch("http://localhost:4000/graphql", config);
+
+      const data = await response.json();
+      if (data) {
+        console.log(data.data.listarProyectos);
+        setProyectos(data.data.listarProyectos);
+      } else {
+        alert("Sin resultados");
+      }
+    }
+    if (proyectos.length === 0) fetchData();
+  });
+
+  //Función para consultar el proyecto a partir de la seleección del registro desde la tabla
+  const proyectoSeleccion = (e) => {
+    alert("Id de registro seleccionado:   " + e.target.id);
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: consultaProyectoSel(e.target.id),
+      };
+      const response = await fetch("http://localhost:4000/graphql", config);
+      const data = await response.json();
+      if (data) {
+        console.log(data);
+        setProyectoSel(data.data.consultarProyecto);
+      } else {
+        alert("Sin resultados");
+      }
+    }
+    fetchData();
+    handleShowActualizar();
+  };
+
+  //Función para registrar cambio en los campos del formulario
+  const handleChange = (event) => {
+    setProyectoSel({ ...proyectoSel, [event.target.name]: event.target.value });
   };
 
   // Return de componente a renderizar
@@ -84,8 +188,11 @@ const ListarProyectos = () => {
                               <th scope="row">{index + 1}</th>
                               <td>{proyecto.nombre}</td>
                               <td>
-                                {proyecto.lider.nombre}
-                                {proyecto.lider.apellido}
+                                {proyecto.lider
+                                  ? proyecto.lider.nombre +
+                                    " " +
+                                    proyecto.lider.apellido
+                                  : ""}
                               </td>
                               <td>{proyecto.fase}</td>
                               <td>{proyecto.estado}</td>
@@ -101,7 +208,7 @@ const ListarProyectos = () => {
                                           id={proyecto._id}
                                           type="button"
                                           className="btn btn-primary"
-                                          onClick={handleShowActualizar}
+                                          onClick={proyectoSeleccion}
                                         >
                                           <Image
                                             src={editar}
@@ -155,7 +262,92 @@ const ListarProyectos = () => {
           <Modal.Title>Actualizar proyecto</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form></Form>
+          <Form>
+            <Form.Group className="mb-10">
+              <Form.Label>Proyecto</Form.Label>
+              <Form.Control
+                type="text"
+                value={proyectoSel.nombre}
+                name="nombre"
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <Form.Label>lider</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder={
+                  proyectoSel.lider
+                    ? proyectoSel.lider.nombre +
+                      " " +
+                      proyectoSel.lider.apellido
+                    : ""
+                }
+                readOnly
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <Form.Label>Estado</Form.Label>
+              <Form.Select size="lg" value={proyectoSel.estado} onChange={null}>
+                <option>ACTIVO</option>
+                <option>INACTIVO</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Fase</Form.Label>
+              <Form.Select size="lg" value={proyectoSel.fase} onChange={null}>
+                <option>INICIADO</option>
+                <option>EN_DESARROLLO</option>
+                <option>TERMINADO</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <Form.Label>Fecha Inicio</Form.Label>
+              <Form.Control
+                type="date"
+                value={proyectoSel.fechaInicio}
+                readOnly
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <Form.Label>Presupesto</Form.Label>
+              <Form.Control
+                type="Number"
+                value={proyectoSel.presupuesto}
+                name="presupuesto"
+                onChange={handleChange}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <InputGroup>
+                <InputGroup.Text>Objetivos generales</InputGroup.Text>
+                <FormControl
+                  as="textarea"
+                  value={proyectoSel.objetivosGenerales}
+                  name="objetivosGenerales"
+                  onChange={handleChange}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-10">
+              <InputGroup>
+                <InputGroup.Text>Objetivos específicos</InputGroup.Text>
+                <FormControl
+                  as="textarea"
+                  value={proyectoSel.objetivosEspecificos}
+                  name="objetivosEspecificos"
+                  onChange={handleChange}
+                />
+              </InputGroup>
+            </Form.Group>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseActualizar}>
