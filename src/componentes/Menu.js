@@ -5,6 +5,7 @@ import { useHistory } from "react-router-dom";
 
 const Menu = () => {
   const history = useHistory();
+  const rol = localStorage.getItem("rol").toLowerCase();
 
   function handleClick(val) {
     if (val === "diauth") {
@@ -42,6 +43,10 @@ const Menu = () => {
               </NavDropdown>
             </Nav>
           </Navbar.Collapse>
+
+          <div>
+            <h2 className="text-success">({rol})</h2>
+          </div>
 
           <div>
             <Button variant="contained" onClick={() => handleClick("user")}>
