@@ -7,6 +7,7 @@ import UsuarioRegistro from "./Usuario/paginas/UsuarioRegistro";
 import UsuarioActualizar from "./Usuario/paginas/UsuarioActualizar";
 import ListarUsuarios from "./Usuario/paginas/ListarUsuarios";
 import ListarProyectos from "./Proyecto/paginas/ListarProyectos";
+import ListarAvancesProyecto from "./Proyecto/paginas/ListarAvancesProyecto";
 import "./App.css";
 import {
   BrowserRouter as Router,
@@ -92,6 +93,19 @@ function App() {
               );
             }}
           />
+
+          <Route
+            path="/listarAvancesProyecto"    //MVH
+            exact
+            render={() => {
+              return (
+                <div>
+                  <Menu />
+                  <ListarAvancesProyecto />
+                </div>
+              );
+            }}
+          />  
 
           <Route path="/SinAutorizacion" exact>
             <SinAutorizacion />

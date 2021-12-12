@@ -39,6 +39,9 @@ const Menu = () => {
                 <NavDropdown.Item href="/consultarSolicitudes">
                   Historial Solicitudes
                 </NavDropdown.Item>
+                <NavDropdown.Item href="/listarAvancesProyecto">   
+                  Historial Avances
+                </NavDropdown.Item>
               </NavDropdown>
             </Nav>
           </Navbar.Collapse>
