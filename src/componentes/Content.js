@@ -15,6 +15,10 @@ const Content = () => {
     history.push("/listarProyectos");
   };
 
+  const gestionSolicitudes = () => {
+    history.push("/listarSolicitudes");
+  };
+
   return (
     <div className="justify-content-center mt-5">
       <h3>Bienvenido {saludo} </h3>
@@ -30,7 +34,7 @@ const Content = () => {
               </Button>
             </td>
             <td>
-              <Button variant="light" onClick={null}>
+              <Button variant="light" onClick={gestionSolicitudes}>
                 <img src={solLogo} alt="" width="200" height="200" />
                 <h3>Solicitudes</h3>
               </Button>

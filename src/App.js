@@ -10,6 +10,8 @@ import ListarProyectos from "./Proyecto/paginas/ListarProyectos";
 import ListarAvancesProyecto from "./Proyecto/paginas/ListarAvancesProyecto";
 import CrearAvance from "./Proyecto/paginas/CrearAvance";
 import ProyectoRegistro from "./Proyecto/paginas/ProyectoRegistro";
+import ListarSolicitudes from "./Solicitudes/paginas/ListarSolicitudes";
+import SolicitudRegistro from "./Solicitudes/paginas/SolicitudRegistro";
 import "./App.css";
 import {
   BrowserRouter as Router,
@@ -96,7 +98,7 @@ function App() {
           />
 
           <Route
-            path="/ListarAvancesProyecto"    //MVH
+            path="/ListarAvancesProyecto" //MVH
             exact
             render={() => {
               return (
@@ -106,10 +108,10 @@ function App() {
                 </div>
               );
             }}
-          />  
+          />
 
           <Route
-            path="/CrearAvance"    //MVH
+            path="/CrearAvance" //MVH
             exact
             render={() => {
               return (
@@ -119,7 +121,8 @@ function App() {
                 </div>
               );
             }}
-          />  
+          />
+
           <Route
             path="/proyectoRegistro"
             exact
@@ -132,6 +135,39 @@ function App() {
                   <div>
                     <Menu />
                     <ProyectoRegistro />
+                  </div>
+                );
+              } else {
+                return <Redirect to="/SinAutorizacion" />;
+              }
+            }}
+          />
+
+          <Route
+            path="/listarSolicitudes"
+            exact
+            render={() => {
+              return (
+                <div>
+                  <Menu />
+                  <ListarSolicitudes />
+                </div>
+              );
+            }}
+          />
+
+<Route
+            path="/solicitudRegistro"
+            exact
+            render={() => {
+              if (
+                localStorage.getItem("estado") === "AUTORIZADO" &&
+                localStorage.getItem("rol") === "ESTUDIANTE"
+              ) {
+                return (
+                  <div>
+                    <Menu />
+                    <SolicitudRegistro />
                   </div>
                 );
               } else {
