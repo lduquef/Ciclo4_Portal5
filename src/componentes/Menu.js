@@ -32,7 +32,16 @@ const Menu = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               <Nav.Link href="/home">Inicio</Nav.Link>
-              <Nav.Link href="/listarUsuarios">Usuarios</Nav.Link>
+              <Nav.Link
+                className={
+                  localStorage.getItem("rol") === "ESTUDIANTE"
+                    ? "invisible"
+                    : "visible"
+                }
+                href="/listarUsuarios"
+              >
+                Usuarios
+              </Nav.Link>
               <NavDropdown title="Proyectos" id="basic-nav-dropdown">
                 <NavDropdown.Item href="/crearSolicitud">
                   Crear Solicitud

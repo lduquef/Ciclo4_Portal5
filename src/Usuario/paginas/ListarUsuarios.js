@@ -1,16 +1,18 @@
-import { Container, Col, Row, Form, Button, Modal, FormLabel } from "react-bootstrap";
-import React, { useState ,useEffect } from "react";
+import { Container, Col, Row, Form, Button, Modal } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
 import Swal from "sweetalert2";
 const ListarUsuarios = () => {
-
-
   //hooks para actualizar lista de usuarios, usuario seleccionado
-  const [Usuarios,setUsuario] = useState([]);
-  const [UsuarioConsul,setUsuarioConsul] = useState([]);
-  // const [usuarioSel, setusuarioSel] = useState([]);
+  const [Usuarios, setUsuario] = useState([]);
+  const [UsuarioConsul, setUsuarioConsul] = useState([]);
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //QUERYS
+  //////////////////////////////////////////////////////////////////////////////////////////
+
   const queryListaUsuarios = () => {
     return JSON.stringify({
       query: `
@@ -28,44 +30,53 @@ const ListarUsuarios = () => {
     `,
     });
   };
-  const mutacionActualizarUsuarioConsul = (id, nombre, apellido, correo, identificacion, estado, rol) =>{
-    console.log(estado,rol);
+  const mutacionActualizarUsuarioConsul = (
+    id,
+    nombre,
+    apellido,
+    correo,
+    identificacion,
+    estado,
+    rol
+  ) => {
     return JSON.stringify({
-        query: `
-        mutation ActualizarUsuario($input: actualizarUsuarioInput!) {
-          actualizarUsuario(input: $input) {
-            _id
-            nombre
-            apellido
-            identificacion
-            correo
-            estado
-            rol
-          }
+      query: `
+      mutation ActualizarUsuario($id: ID!, $nombre: String!, $apellido: String!, $identificacion: String!, $correo: String!, $estado: Enum_EstadoUsuario!, $rol: Enum_Rol!) {
+        actualizarUsuario(_id: $id, nombre: $nombre, apellido: $apellido, identificacion: $identificacion, correo: $correo, estado: $estado, rol: $rol) {
+          _id
+          nombre
+          apellido
+          identificacion
+          correo
+          estado
+          rol
         }
+      }
       `,
-      variables:
-        `
-        {
-          "input": {
-            "_id":"${id}",
-            "nombre": "${nombre}",
-            "apellido": "${apellido}",
-            "identificacion": "${identificacion}",
-            "correo": "${correo}",
-            "estado": "${estado}",
-            "rol":"${rol}"
-          }
-        }
+      variables: `
+      {
+        "id": "${id}",
+        "nombre": "${nombre}",
+        "apellido": "${apellido}",
+        "identificacion": "${identificacion}",
+        "correo": "${correo}",
+        "estado": "${estado}",
+        "rol":"${rol}"
+      }  
         `,
-      });
+    });
   };
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  //FUNCIONES
+  //////////////////////////////////////////////////////////////////////////////////////////
+
   useEffect(() => {
     async function fetchData() {
       const config = {
         method: "POST",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "Content-Type": "application/json",
         },
         body: queryListaUsuarios(),
@@ -74,7 +85,6 @@ const ListarUsuarios = () => {
 
       const data = await response.json();
       if (data) {
-        console.log(data.data.listarUsuarios)
         setUsuario(data.data.listarUsuarios);
       } else {
         alert("Sin resultados");
@@ -82,9 +92,9 @@ const ListarUsuarios = () => {
     }
     if (Usuarios.length === 0) fetchData();
   });
-  
-  const ActualizarUsuario =() => {
-    async function fetchData2() {
+
+  const actualizarUsuario = () => {
+    async function fetchData() {
       const config = {
         method: "POST",
         headers: {
@@ -103,26 +113,51 @@ const ListarUsuarios = () => {
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       if (data.data.actualizarUsuario) {
         setUsuario([]);
         popupExitoso("Actualización exitosa");
       }
     }
-    fetchData2();
-    handleCloseActualizar();
-    // validarCamposRequeridos();
-    // if (validado) {
-    //   fetchData();
-    //   handleCloseActualizar();
-    // }
-  }
+    validarCamposRequeridos();
+    if (validado) {
+      fetchData();
+      handleCloseActualizar();
+    }
+  };
+
+  //Función para validar los campos obligatorios del formulario
+  var validado = false;
+  const validarCamposRequeridos = () => {
+    validado = true;
+    if (UsuarioConsul.nombre === "") {
+      popupFallido("El campo nombre de usuario es requerido");
+      validado = false;
+    }
+    if (UsuarioConsul.apellido === "") {
+      popupFallido("El campo apellido es requerido");
+      validado = false;
+    }
+    if (UsuarioConsul.identificacion === "") {
+      popupFallido("Es necesario indicar la identificación del usuario");
+      validado = false;
+    }
+    if (UsuarioConsul.correo === "") {
+      popupFallido("El campo correo electrónico es requerido");
+      validado = false;
+    }
+    if (UsuarioConsul.estado === "") {
+      popupFallido("El estado es requerido");
+      validado = false;
+    }
+  };
+
   // funciones visibilidad de las pantallas modales
   const [showActualizar, setShowActualizar] = useState(false);
   const [showVisualizar, setShowVisualizar] = useState(false);
   const handleShowActualizar = (user) => {
+    setUsuarioConsul(user);
     setShowActualizar(true);
-    setUsuarioConsul(user)
   };
   const handleCloseActualizar = () => {
     setShowActualizar(false);
@@ -133,11 +168,10 @@ const ListarUsuarios = () => {
   const handleCloseVisualizar = () => {
     setShowVisualizar(false);
   };
-  const visualizarUsuario= (user) =>{
+  const visualizarUsuario = (user) => {
     setShowVisualizar(true);
-    setUsuarioConsul(user)
-
-  }
+    setUsuarioConsul(user);
+  };
 
   //Funciones para generar popup confirmación de exito o falla de operación
   const popupExitoso = (msg) => {
@@ -156,22 +190,35 @@ const ListarUsuarios = () => {
     });
   };
 
-  
   //Función para registrar cambio en los campos del formulario
   const handleChange = (event) => {
-    setUsuarioConsul({ ...UsuarioConsul, [event.target.name]: event.target.value ,[event.target.apellido]: event.target.value , [event.target.correo]: event.target.value});
-    
+    setUsuarioConsul({
+      ...UsuarioConsul,
+      [event.target.name]: event.target.value,
+      [event.target.apellido]: event.target.value,
+      [event.target.correo]: event.target.value,
+    });
   };
 
-  const habilitarCampo= () =>{
-    const rol = localStorage.getItem("rol"); 
+  const habilitarCampo = () => {
+    const rol = localStorage.getItem("rol");
     if (rol === "LIDER") {
-      return("true" )
-      
-    }else {
-      return "false"
+      return "true";
+    } else {
+      return "false";
     }
-  }
+  };
+
+  //Función para pintar la alerta color del estado de activación usuario
+  const colorAlertaEstado = (estado) => {
+    if (estado === "AUTORIZADO") {
+      return "bg-success text-white";
+    } else if (estado === "NO AUTORIZADO") {
+      return "bg-danger text-white";
+    } else if (estado === "PENDIENTE") {
+      return "bg-warning text-white";
+    }
+  };
 
   // Return de componente a renderizar
   return (
@@ -210,7 +257,9 @@ const ListarUsuarios = () => {
                               <td>{usuario.correo}</td>
                               <td>{usuario.identificacion}</td>
                               <td>{usuario.rol}</td>
-                              <td>{usuario.estado}</td>
+                              <td className={colorAlertaEstado(usuario.estado)}>
+                                {usuario.estado}
+                              </td>
                               <td>
                                 <table className="table col-5 col-s-12">
                                   <thead></thead>
@@ -221,7 +270,9 @@ const ListarUsuarios = () => {
                                           id={usuario._id}
                                           type="button"
                                           className="btn btn-primary"
-                                          onClick={()=>{handleShowActualizar(usuario)}}
+                                          onClick={() => {
+                                            handleShowActualizar(usuario);
+                                          }}
                                         >
                                           <Image
                                             src={editar}
@@ -236,7 +287,9 @@ const ListarUsuarios = () => {
                                           id={usuario._id}
                                           type="button"
                                           className="btn btn-primary"
-                                          onClick={()=>{visualizarUsuario(usuario)}}
+                                          onClick={() => {
+                                            visualizarUsuario(usuario);
+                                          }}
                                         >
                                           <Image
                                             src={info}
@@ -276,14 +329,14 @@ const ListarUsuarios = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
-          <Form.Group className="mb-2">
+            <Form.Group className="mb-2">
               <Form.Label>Nombre </Form.Label>
               <Form.Control
                 type="text"
                 value={UsuarioConsul.nombre || ""}
                 name="nombre"
                 onChange={handleChange}
-                readOnly = {habilitarCampo}
+                //readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -293,7 +346,7 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.apellido || ""}
                 name="apellido"
                 onChange={handleChange}
-                readOnly = {habilitarCampo}
+                readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -303,7 +356,7 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.correo || ""}
                 name="correo"
                 onChange={handleChange}
-                readOnly = {habilitarCampo}
+                readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -313,7 +366,7 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.identificacion || ""}
                 name="identificacion"
                 onChange={handleChange}
-                readOnly = {habilitarCampo}
+                readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -323,7 +376,7 @@ const ListarUsuarios = () => {
                 name="rol"
                 value={UsuarioConsul.rol || ""}
                 onChange={handleChange}
-                disabled 
+                disabled
               >
                 <option>LIDER</option>
                 <option>ADMINISTRADOR</option>
@@ -343,14 +396,13 @@ const ListarUsuarios = () => {
                 <option>NO_AUTORIZADO</option>
               </Form.Select>
             </Form.Group>
-
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseActualizar}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={ActualizarUsuario}>
+          <Button variant="primary" onClick={actualizarUsuario}>
             Guardar
           </Button>
         </Modal.Footer>
@@ -366,14 +418,14 @@ const ListarUsuarios = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
-          <Form.Group className="mb-2">
+            <Form.Group className="mb-2">
               <Form.Label>Nombre </Form.Label>
               <Form.Control
                 type="text"
                 value={UsuarioConsul.nombre || ""}
                 name="nombre"
                 onChange={handleChange}
-                readOnly 
+                readOnly
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -383,7 +435,7 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.apellido || ""}
                 name="apellido"
                 onChange={handleChange}
-                readOnly 
+                readOnly
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -393,7 +445,7 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.correo || ""}
                 name="correo"
                 onChange={handleChange}
-                readOnly 
+                readOnly
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -403,7 +455,7 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.identificacion || ""}
                 name="identificacion"
                 onChange={handleChange}
-                readOnly 
+                readOnly
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -413,7 +465,7 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.rol || ""}
                 name="rol"
                 onChange={handleChange}
-                readOnly 
+                readOnly
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -423,11 +475,10 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.estado || ""}
                 name="estado"
                 onChange={handleChange}
-                readOnly 
+                readOnly
               />
             </Form.Group>
-                          ;
-                        
+            ;
           </Form>
         </Modal.Body>
         <Modal.Footer>
