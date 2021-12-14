@@ -12,37 +12,37 @@ import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
+import { useHistory } from "react-router-dom";
 
 //import Swal from "sweetalert2";
 
 const ListarAvances = () => {
+  const history = useHistory();
   const [avances, setAvances] = useState([]);
-  
-  const queryListaAvances = (id) => {
+    
+  const queryListaAvances = () => {
     return JSON.stringify({
       query: `
-      query Query($idProyecto: String!) {
-        listarAvancesProyecto(idProyecto: $idProyecto) {
-          _id
-          proyecto {
-            nombre
-          }
-          estudiante {
-            nombre
-          }
-          descripcion
-          observaciones
-          fechaAvance
-          fechaObservacion
-        }
-      }
+      query ListarAvancesProyecto($idProyecto: String!) {
+  listarAvancesProyecto(idProyecto: $idProyecto) {
+    _id
+    proyecto {
+      nombre
+    }
+    estudiante {
+      nombre
+    }
+    descripcion
+    observaciones
+    fechaAvance
+    fechaObservacion
+  }
+}
     `,
     variables:
       `
   {
-    "idProyecto": "` +
-      id +
-      `"
+    "idProyecto": "61a542e05d0eb3a6b541f79f"
   }
   `,
     });
@@ -55,6 +55,7 @@ const ListarAvances = () => {
   //Evento Hook que permite el cargue inicial de los proyectos en pantalla
   useEffect(() => {
     async function fetchData() {
+     
       const config = {
         method: "POST",
         headers: {
@@ -75,6 +76,7 @@ const ListarAvances = () => {
       }
      }
      if (avances.length === 0) fetchData();
+     
   });
 
 
@@ -88,6 +90,21 @@ const ListarAvances = () => {
                 <h2>Lista de avances de proyecto</h2>
                 <Container className="mt-4">
                   <Form>
+                  <Col xs={5}>
+                    <Button
+                      className={
+                        localStorage.getItem("rol") === "ESTUDIANTE"
+                          ? "visible btn btn-primary"
+                          : "invisible btn btn-primary"
+                      }
+                      type="button"
+                      onClick={() => {
+                        history.push("/CrearAvance");
+                      }}
+                    >
+                      Crear Avance
+                    </Button>
+                  </Col>
                     <Form.Group className="mb-3">
 
                     <table
@@ -133,7 +150,24 @@ const ListarAvances = () => {
                                         <Button
                                           type="button"
                                           className="btn btn-primary"
-                                          onClick={null}
+                                          onClick={() => {
+                                            history.push("/ActualizarAvance");  //PENDIENTE EDITAR LINK
+                                          }}
+                                        >
+                                          <Image
+                                            src={editar}
+                                            rounded
+                                          />
+                                        </Button>
+                                      </td>
+
+                                      <td>
+                                        <Button
+                                          type="button"
+                                          className="btn btn-primary"
+                                          onClick={() => {
+                                            history.push("/ActualizarObservacion");  //PENDIENTE EDITAR LINK
+                                          }}
                                         >
                                           <Image
                                             src={editar}
@@ -178,6 +212,5 @@ const ListarAvances = () => {
 
       </div>
     );
-//setAvances(data.data.listarProyectos);
 };
   export default ListarAvances;

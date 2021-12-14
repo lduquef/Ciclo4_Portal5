@@ -81,6 +81,7 @@ const Content = () => {
           "apellidoUsuario",
           data.data.validarUsuario.apellido
         );
+        localStorage.setItem("idUsuario", data.data.validarUsuario._id);
 
         popupExitoso("Bienvenido");
         setTimeout(function () {

@@ -8,6 +8,8 @@ import UsuarioActualizar from "./Usuario/paginas/UsuarioActualizar";
 import ListarUsuarios from "./Usuario/paginas/ListarUsuarios";
 import ListarProyectos from "./Proyecto/paginas/ListarProyectos";
 import ListarAvancesProyecto from "./Proyecto/paginas/ListarAvancesProyecto";
+import CrearAvance from "./Proyecto/paginas/CrearAvance";
+import ProyectoRegistro from "./Proyecto/paginas/ProyectoRegistro";
 import "./App.css";
 import {
   BrowserRouter as Router,
@@ -48,7 +50,6 @@ function App() {
             render={() => {
               return (
                 <div>
-                  <Menu />
                   <UsuarioRegistro />
                 </div>
               );
@@ -95,7 +96,7 @@ function App() {
           />
 
           <Route
-            path="/listarAvancesProyecto"    //MVH
+            path="/ListarAvancesProyecto"    //MVH
             exact
             render={() => {
               return (
@@ -106,6 +107,38 @@ function App() {
               );
             }}
           />  
+
+          <Route
+            path="/CrearAvance"    //MVH
+            exact
+            render={() => {
+              return (
+                <div>
+                  <Menu />
+                  <CrearAvance />
+                </div>
+              );
+            }}
+          />  
+          <Route
+            path="/proyectoRegistro"
+            exact
+            render={() => {
+              if (
+                localStorage.getItem("estado") === "AUTORIZADO" &&
+                localStorage.getItem("rol") === "LIDER"
+              ) {
+                return (
+                  <div>
+                    <Menu />
+                    <ProyectoRegistro />
+                  </div>
+                );
+              } else {
+                return <Redirect to="/SinAutorizacion" />;
+              }
+            }}
+          />
 
           <Route path="/SinAutorizacion" exact>
             <SinAutorizacion />

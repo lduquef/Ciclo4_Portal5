@@ -12,10 +12,11 @@ import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
-import aprobar from "../../img/aprobar.svg";
 import Swal from "sweetalert2";
+import { useHistory } from "react-router-dom";
 
 const ListarProyectos = () => {
+  const history = useHistory();
   //hooks para actualizar lista de proyectos, proyecto seleccionado
   const [proyectos, setProyectos] = useState([]);
   const [proyectoSel, setProyectoSel] = useState([]);
@@ -23,7 +24,6 @@ const ListarProyectos = () => {
   // funciones visibilidad de las pantallas modales
   const [showActualizar, setShowActualizar] = useState(false);
   const [showVisualizar, setShowVisualizar] = useState(false);
-  const [showAprobar, setShowAprobar] = useState(false);
 
   const handleShowActualizar = () => {
     setShowActualizar(true);
@@ -36,13 +36,6 @@ const ListarProyectos = () => {
   };
   const handleCloseVisualizar = () => {
     setShowVisualizar(false);
-  };
-
-  const handleShowAprobar = () => {
-    setShowAprobar(true);
-  };
-  const handleCloseAprobar = () => {
-    setShowAprobar(false);
   };
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +63,39 @@ const ListarProyectos = () => {
         }
       }
     `,
+    });
+  };
+
+  const queryconsultaProyectosLider = (idLider) => {
+    return JSON.stringify({
+      query: `
+      query ConsultarProyectosLider($idLider: ID!) {
+      consultarProyectosLider(idLider: $idLider) {
+          _id
+          nombre
+          presupuesto
+          fechaInicio
+          fechaFin
+          estado
+          fase
+          lider {
+            nombre
+            apellido
+          }
+          objetivosGenerales
+          objetivosEspecificos
+          apruebaCreacion  
+        }
+      }
+      `,
+      variables:
+        `
+      {
+        "idLider": "` +
+        idLider +
+        `"
+      }
+      `,
     });
   };
 
@@ -103,6 +129,38 @@ const ListarProyectos = () => {
         `"
     }
     `,
+    });
+  };
+
+  const mutacionAutorizaProyectoSel = (id) => {
+    return JSON.stringify({
+      query: `
+      mutation AutorizaCreacionProyecto($autorizaCreacionProyectoId: ID!) {
+        autorizaCreacionProyecto(id: $autorizaCreacionProyectoId) {
+          _id
+          nombre
+          presupuesto
+          fechaInicio
+          fechaFin
+          estado
+          fase
+          lider {
+            nombre
+            apellido
+          }
+          objetivosGenerales
+          objetivosEspecificos
+          apruebaCreacion  
+        }
+      }
+      `,
+      variables:
+        `{
+        "autorizaCreacionProyectoId": "` +
+        id +
+        `"
+        }
+      `,
     });
   };
 
@@ -158,6 +216,85 @@ const ListarProyectos = () => {
     `,
     });
   };
+
+  const mutacionActualizarEstadoProyectoSel = (id, estado, fechaInicio) => {
+    return JSON.stringify({
+      query: `
+      mutation ActualizarEstadoProyecto($input: ActualizaEstadoProyectoInput!) {
+      actualizarEstadoProyecto(input: $input) {
+          _id
+          nombre
+          presupuesto
+          fechaInicio
+          fechaFin
+          estado
+          fase
+          lider {
+            nombre
+            apellido
+          }
+          objetivosGenerales
+          objetivosEspecificos
+          apruebaCreacion
+        }
+      }
+    `,
+      variables:
+        `
+        {
+          "input": {
+            "_id": "` +
+        id +
+        `",
+            "estado": "` +
+        estado +
+        `",
+            "fechaInicio": "` +
+        fechaInicio +
+        `"
+          }
+        }
+    `,
+    });
+  };
+
+  const mutacionActualizarFaseProyectoSel = (id, fase) => {
+    return JSON.stringify({
+      query: `
+      mutation ActualizarFaseProyecto($input: ActualizaFaseProyectoInput!) {
+      actualizarFaseProyecto(input: $input) {
+          _id
+          nombre
+          presupuesto
+          fechaInicio
+          fechaFin
+          estado
+          fase
+          lider {
+            nombre
+            apellido
+          }
+          objetivosGenerales
+          objetivosEspecificos
+          apruebaCreacion
+        }
+      }
+    `,
+      variables:
+        `
+        {
+          "input": {
+            "_id": "` +
+        id +
+        `",
+            "fase": "` +
+        fase +
+        `"
+          }
+        }
+    `,
+    });
+  };
   ///////////////////////////////////////////////////////////////////////////////////////////
   //FUNCIONES
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -165,19 +302,29 @@ const ListarProyectos = () => {
   //Evento Hook que permite el cargue inicial de los proyectos en pantalla
   useEffect(() => {
     async function fetchData() {
+      var consulta = "";
+      if (localStorage.getItem("rol") === "LIDER") {
+        consulta = queryconsultaProyectosLider(
+          localStorage.getItem("idUsuario")
+        );
+      } else {
+        consulta = queryListaProyectos();
+      }
       const config = {
         method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: queryListaProyectos(),
+        body: consulta,
       };
       const response = await fetch("http://localhost:4000/graphql", config);
 
       const data = await response.json();
-      if (data) {
+      if (data.data.listarProyectos) {
         setProyectos(data.data.listarProyectos);
+      } else if (data.data.consultarProyectosLider) {
+        setProyectos(data.data.consultarProyectosLider);
       } else {
         alert("Sin resultados");
       }
@@ -185,9 +332,8 @@ const ListarProyectos = () => {
     if (proyectos.length === 0) fetchData();
   });
 
-  //Función para consultar el proyecto a partir de la seleección del registro desde la tabla
+  //Función para consultar el proyecto a partir de la selección del registro desde la tabla
   const proyectoSeleccion = (id, operacion) => {
-    alert("Id de registro seleccionado:   " + id);
     async function fetchData() {
       const config = {
         method: "POST",
@@ -199,7 +345,7 @@ const ListarProyectos = () => {
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
-      if (data) {
+      if (data.data.consultarProyecto) {
         setProyectoSel(data.data.consultarProyecto);
       } else {
         alert("Sin resultados");
@@ -207,11 +353,39 @@ const ListarProyectos = () => {
     }
     fetchData();
     if (operacion === "ACTUALIZAR") handleShowActualizar();
-    if (operacion === "APROBAR") handleShowAprobar();
+    if (operacion === "VISUALIZAR") handleShowVisualizar();
   };
 
   //Función para actualizar el proyecto seleccionado desde la pantalla modal
-  const proyectoActualizar = () => {
+  const proyectoActualizar = (tipoActualizacion) => {
+    var consulta = "";
+    if (tipoActualizacion === "APROBACION") {
+      consulta = mutacionAutorizaProyectoSel(proyectoSel._id);
+    }
+    if (tipoActualizacion === "ACTUALIZACION") {
+      consulta = mutacionActualizarProyectoSel(
+        proyectoSel._id,
+        proyectoSel.nombre,
+        proyectoSel.objetivosGenerales,
+        proyectoSel.objetivosEspecificos,
+        proyectoSel.presupuesto
+      );
+    }
+    if (tipoActualizacion === "ESTADO") {
+      consulta = mutacionActualizarEstadoProyectoSel(
+        proyectoSel._id,
+        proyectoSel.estado,
+        new Date().toLocaleDateString()
+      );
+    }
+
+    if (tipoActualizacion === "FASE") {
+      consulta = mutacionActualizarFaseProyectoSel(
+        proyectoSel._id,
+        proyectoSel.fase
+      );
+    }
+
     async function fetchData() {
       const config = {
         method: "POST",
@@ -219,17 +393,16 @@ const ListarProyectos = () => {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: mutacionActualizarProyectoSel(
-          proyectoSel._id,
-          proyectoSel.nombre,
-          proyectoSel.objetivosGenerales,
-          proyectoSel.objetivosEspecificos,
-          proyectoSel.presupuesto
-        ),
+        body: consulta,
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
-      if (data) {
+      if (
+        data.data.autorizaCreacionProyecto ||
+        data.data.actualizarProyecto ||
+        data.data.actualizarEstadoProyecto ||
+        data.data.actualizarFaseProyecto
+      ) {
         setProyectos([]);
         popupExitoso("Actualización exitosa");
       }
@@ -279,7 +452,15 @@ const ListarProyectos = () => {
   //Función para registrar cambio en los campos del formulario
   const handleChange = (event) => {
     setProyectoSel({ ...proyectoSel, [event.target.name]: event.target.value });
-    console.log(event.target.name + " : " + event.target.value);
+  };
+
+  //Función para registrar cambio en los campos del formulario
+  const handleChangeAprueba = () => {
+    if (!proyectoSel.apruebaCreacion) {
+      proyectoSel.apruebaCreacion = true;
+    } else {
+      proyectoSel.apruebaCreacion = false;
+    }
   };
 
   // Return de componente a renderizar
@@ -290,8 +471,24 @@ const ListarProyectos = () => {
           <Col xs={12}>
             <div className="row justify-content-center mt-4">
               <h2>Lista de proyectos registrados</h2>
+
               <Container className="mt-4">
                 <Form>
+                  <Col xs={5}>
+                    <Button
+                      className={
+                        localStorage.getItem("rol") === "LIDER"
+                          ? "visible btn btn-primary"
+                          : "invisible btn btn-primary"
+                      }
+                      type="button"
+                      onClick={() => {
+                        history.push("/proyectoRegistro");
+                      }}
+                    >
+                      Crear Proyecto
+                    </Button>
+                  </Col>
                   <Form.Group className="mb-3">
                     <table
                       id="tbProyecto"
@@ -360,37 +557,15 @@ const ListarProyectos = () => {
                                           id={proyecto._id}
                                           type="button"
                                           className="btn btn-primary"
-                                          onClick={handleShowVisualizar}
-                                        >
-                                          <Image
-                                            src={info}
-                                            rounded
-                                            id={proyecto._id}
-                                          />
-                                        </Button>
-                                      </td>
-
-                                      <td
-                                        className={
-                                          localStorage.getItem("rol") ===
-                                          "ADMINISTRADOR"
-                                            ? "visible"
-                                            : "invisible"
-                                        }
-                                      >
-                                        <Button
-                                          id={proyecto._id}
-                                          type="button"
-                                          className="btn btn-primary"
                                           onClick={() =>
                                             proyectoSeleccion(
                                               proyecto._id,
-                                              "APROBAR"
+                                              "VISUALIZAR"
                                             )
                                           }
                                         >
                                           <Image
-                                            src={aprobar}
+                                            src={info}
                                             rounded
                                             id={proyecto._id}
                                           />
@@ -429,122 +604,175 @@ const ListarProyectos = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group className="mb-2">
-              <Form.Label>Nombre proyecto</Form.Label>
-              <Form.Control
-                type="text"
-                value={proyectoSel.nombre || ""}
-                name="nombre"
-                onChange={handleChange}
-              />
-            </Form.Group>
+            <Container fluid>
+              <Modal.Title>Aprobacion proyecto</Modal.Title>
+              <Row>
+                <Form.Group className="mb-2">
+                  <div className="row">
+                    <Form.Label className="col-md-3">
+                      Aprobación creación
+                    </Form.Label>
+                    <Form.Check
+                      className="col-md-9 ms-auto"
+                      aria-label="option 1"
+                      name="apruebaCreacion"
+                      value={proyectoSel.apruebaCreacion}
+                      onChange={handleChangeAprueba}
+                      defaultChecked={proyectoSel.apruebaCreacion}
+                    />
+                  </div>
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      proyectoActualizar("APROBACION");
+                    }}
+                    disabled={proyectoSel.apruebaCreacion ? true : false}
+                  >
+                    Aprobar
+                  </Button>
+                </Form.Group>
+              </Row>
+            </Container>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Nombre lider</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder={
-                  proyectoSel.lider
-                    ? proyectoSel.lider.nombre +
-                      " " +
-                      proyectoSel.lider.apellido
-                    : ""
-                }
-                readOnly
-              />
-            </Form.Group>
+            <Container fluid className="mt-5">
+              <Modal.Title>Formulación proyecto</Modal.Title>
+              <Row>
+                <Form.Group className="mb-2">
+                  <Form.Label>Nombre proyecto</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={proyectoSel.nombre || ""}
+                    name="nombre"
+                    onChange={handleChange}
+                  />
+                </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Estado</Form.Label>
-              <Form.Select
-                size="lg"
-                name="estado"
-                value={proyectoSel.estado || ""}
-                onChange={handleChange}
-                disabled="true"
+                <Form.Group className="mb-2">
+                  <Form.Label>Nombre lider</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder={
+                      proyectoSel.lider
+                        ? proyectoSel.lider.nombre +
+                          " " +
+                          proyectoSel.lider.apellido
+                        : ""
+                    }
+                    readOnly
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-2">
+                  <Form.Label>Fecha Inicio</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={proyectoSel.fechaInicio || ""}
+                    readOnly
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-2">
+                  <Form.Label>Presupesto (pesos $ COP)</Form.Label>
+                  <Form.Control
+                    type="Number"
+                    value={proyectoSel.presupuesto || 0}
+                    name="presupuesto"
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-2">
+                  <Form.Label>Objetivos generales</Form.Label>
+                  <FormControl
+                    as="textarea"
+                    value={proyectoSel.objetivosGenerales || ""}
+                    name="objetivosGenerales"
+                    onChange={handleChange}
+                    rows="5"
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-2">
+                  <Form.Label>Objetivos específicos</Form.Label>
+                  <FormControl
+                    as="textarea"
+                    value={proyectoSel.objetivosEspecificos || ""}
+                    name="objetivosEspecificos"
+                    onChange={handleChange}
+                    rows="5"
+                  />
+                </Form.Group>
+              </Row>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  proyectoActualizar("ACTUALIZACION");
+                }}
+                disabled={proyectoSel.apruebaCreacion ? false : true}
               >
-                <option>ACTIVO</option>
-                <option>INACTIVO</option>
-              </Form.Select>
-            </Form.Group>
+                Guardar
+              </Button>
+            </Container>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Fase</Form.Label>
-              <Form.Select
-                size="lg"
-                name="fase"
-                value={proyectoSel.fase || ""}
-                onChange={handleChange}
-                disabled="true"
+            <Container fluid className="mt-5">
+              <Modal.Title>Actualizar estado</Modal.Title>
+              <Row>
+                <Form.Group className="mb-2">
+                  <Form.Label>Estado</Form.Label>
+                  <Form.Select
+                    size="lg"
+                    name="estado"
+                    value={proyectoSel.estado || ""}
+                    onChange={handleChange}
+                  >
+                    <option>ACTIVO</option>
+                    <option>INACTIVO</option>
+                  </Form.Select>
+                </Form.Group>
+              </Row>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  proyectoActualizar("ESTADO");
+                }}
+                disabled={proyectoSel.apruebaCreacion ? false : true}
               >
-                <option>INICIADO</option>
-                <option>EN_DESARROLLO</option>
-                <option>TERMINADO</option>
-              </Form.Select>
-            </Form.Group>
+                Guardar
+              </Button>
+            </Container>
 
-            <Form.Group className="mb-2">
-              <Form.Label>Fecha Inicio</Form.Label>
-              <Form.Control
-                type="date"
-                value={proyectoSel.fechaInicio || ""}
-                readOnly
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Presupesto (pesos $ COP)</Form.Label>
-              <Form.Control
-                type="Number"
-                value={proyectoSel.presupuesto || 0}
-                name="presupuesto"
-                onChange={handleChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Objetivos generales</Form.Label>
-              <FormControl
-                as="textarea"
-                value={proyectoSel.objetivosGenerales || ""}
-                name="objetivosGenerales"
-                onChange={handleChange}
-                rows="5"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Objetivos específicos</Form.Label>
-              <FormControl
-                as="textarea"
-                value={proyectoSel.objetivosEspecificos || ""}
-                name="objetivosEspecificos"
-                onChange={handleChange}
-                rows="5"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <div className="row">
-                <Form.Label className="col-md-3">Aprueba creación</Form.Label>
-                <Form.Check
-                  className="col-md-9 ms-auto"
-                  aria-label="option 1"
-                  name="apruebaCreacion"
-                  value={proyectoSel.apruebaCreacion}
-                  onChange={handleChange}
-                  disabled="true"
-                />
-              </div>
-            </Form.Group>
+            <Container fluid className="mt-5">
+              <Modal.Title>Actualizar fase</Modal.Title>
+              <Row>
+                <Form.Group className="mb-2">
+                  <Form.Label>Fase</Form.Label>
+                  <Form.Select
+                    size="lg"
+                    name="fase"
+                    value={proyectoSel.fase || ""}
+                    onChange={handleChange}
+                  >
+                    <option>INICIADO</option>
+                    <option>EN_DESARROLLO</option>
+                    <option>TERMINADO</option>
+                  </Form.Select>
+                </Form.Group>
+              </Row>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  proyectoActualizar("FASE");
+                }}
+                disabled={proyectoSel.apruebaCreacion ? false : true}
+              >
+                Guardar
+              </Button>
+            </Container>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseActualizar}>
             Cancelar
-          </Button>
-          <Button variant="primary" onClick={proyectoActualizar}>
-            Guardar
           </Button>
         </Modal.Footer>
       </Modal>
@@ -633,8 +861,9 @@ const ListarProyectos = () => {
                   className="col-md-9 ms-auto"
                   aria-label="option 1"
                   name="apruebaCreacion"
-                  placeholder={proyectoSel.apruebaCreacion}
-                  disabled="true"
+                  value={proyectoSel.apruebaCreacion}
+                  defaultChecked={proyectoSel.apruebaCreacion}
+                  disabled
                 />
               </div>
             </Form.Group>
@@ -643,73 +872,6 @@ const ListarProyectos = () => {
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseVisualizar}>
             Cancelar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal
-        name="ModalAprobar"
-        className="modal-dialog-scrollable"
-        show={showAprobar}
-        onHide={handleCloseAprobar}
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Aprobar proyecto</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-2">
-              <Form.Label>Nombre proyecto</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder={proyectoSel.nombre || ""}
-                name="nombre"
-                readOnly
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Nombre lider</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder={
-                  proyectoSel.lider
-                    ? proyectoSel.lider.nombre +
-                      " " +
-                      proyectoSel.lider.apellido
-                    : ""
-                }
-                readOnly
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <div className="row">
-                <Form.Label className="col-md-3">Aprueba creación</Form.Label>
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="flexCheckIndeterminate"
-                    name="apruebaCreacion"
-                    value={proyectoSel.apruebaCreacion}
-                    onChange={handleChange}
-                  />
-                  <label class="form-check-label" for="flexCheckIndeterminate">
-                    Indeterminate checkbox
-                  </label>
-                </div>
-              </div>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseAprobar}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={proyectoActualizar}>
-            Guardar
           </Button>
         </Modal.Footer>
       </Modal>
