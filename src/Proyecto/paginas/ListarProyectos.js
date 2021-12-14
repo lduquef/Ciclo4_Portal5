@@ -871,7 +871,7 @@ const ListarProyectos = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseVisualizar}>
-            Cancelar
+            Cerrar
           </Button>
         </Modal.Footer>
       </Modal>
