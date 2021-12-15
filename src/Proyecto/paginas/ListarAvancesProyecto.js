@@ -13,13 +13,14 @@ import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
 import { useHistory } from "react-router-dom";
-
-//import Swal from "sweetalert2";
+import { useLocation } from "react-router-dom";
 
 const ListarAvances = () => {
+  const location = useLocation();
   const history = useHistory();
   const [avances, setAvances] = useState([]);
-    
+
+  const idProyecto = location.state.detail;
   const queryListaAvances = () => {
     return JSON.stringify({
       query: `
@@ -39,10 +40,9 @@ const ListarAvances = () => {
   }
 }
     `,
-    variables:
-      `
+      variables: `
   {
-    "idProyecto": "61a542e05d0eb3a6b541f79f"
+    "idProyecto": "${idProyecto}"
   }
   `,
     });
@@ -55,7 +55,6 @@ const ListarAvances = () => {
   //Evento Hook que permite el cargue inicial de los proyectos en pantalla
   useEffect(() => {
     async function fetchData() {
-     
       const config = {
         method: "POST",
         headers: {
@@ -67,29 +66,26 @@ const ListarAvances = () => {
       const response = await fetch("http://localhost:4000/graphql", config);
 
       const data = await response.json();
-      console.log (data);
-    
+
       if (data.data.listarAvancesProyecto) {
         setAvances(data.data.listarAvancesProyecto);
       } else {
         alert("Sin resultados");
       }
-     }
-     if (avances.length === 0) fetchData();
-     
+    }
+    if (avances.length === 0) fetchData();
   });
 
-
-    // Return de componente a renderizar
-    return (
-      <div>
-        <Container>
-          <Row>
-            <Col xs={12}>
-              <div className="row justify-content-center mt-4">
-                <h2>Lista de avances de proyecto</h2>
-                <Container className="mt-4">
-                  <Form>
+  // Return de componente a renderizar
+  return (
+    <div>
+      <Container>
+        <Row>
+          <Col xs={12}>
+            <div className="row justify-content-center mt-4">
+              <h2>Lista de avances de proyecto</h2>
+              <Container className="mt-4">
+                <Form>
                   <Col xs={5}>
                     <Button
                       className={
@@ -105,8 +101,7 @@ const ListarAvances = () => {
                       Crear Avance
                     </Button>
                   </Col>
-                    <Form.Group className="mb-3">
-
+                  <Form.Group className="mb-3">
                     <table
                       id="tbAvancesProyecto"
                       className="table table-striped col-5 col-s-12"
@@ -140,8 +135,8 @@ const ListarAvances = () => {
                               <td>{avance.oservaciones}</td>
                               <td>{avance.fechaAvance}</td>
                               <td>{avance.fechaObservaciones}</td>
-                              
-                               <td>
+
+                              <td>
                                 <table className="table col-5 col-s-12">
                                   <thead></thead>
                                   <tbody>
@@ -151,13 +146,10 @@ const ListarAvances = () => {
                                           type="button"
                                           className="btn btn-primary"
                                           onClick={() => {
-                                            history.push("/ActualizarAvance");  //PENDIENTE EDITAR LINK
+                                            history.push("/ActualizarAvance"); //PENDIENTE EDITAR LINK
                                           }}
                                         >
-                                          <Image
-                                            src={editar}
-                                            rounded
-                                          />
+                                          <Image src={editar} rounded />
                                         </Button>
                                       </td>
 
@@ -166,13 +158,12 @@ const ListarAvances = () => {
                                           type="button"
                                           className="btn btn-primary"
                                           onClick={() => {
-                                            history.push("/ActualizarObservacion");  //PENDIENTE EDITAR LINK
+                                            history.push(
+                                              "/ActualizarObservacion"
+                                            ); //PENDIENTE EDITAR LINK
                                           }}
                                         >
-                                          <Image
-                                            src={editar}
-                                            rounded
-                                          />
+                                          <Image src={editar} rounded />
                                         </Button>
                                       </td>
 
@@ -182,10 +173,7 @@ const ListarAvances = () => {
                                           className="btn btn-primary"
                                           onClick={null}
                                         >
-                                          <Image
-                                            src={info}
-                                            rounded
-                                          />
+                                          <Image src={info} rounded />
                                         </Button>
                                       </td>
                                     </tr>
@@ -197,20 +185,18 @@ const ListarAvances = () => {
                         })}
                       </tbody>
                     </table>
-                      
-                    </Form.Group>
-                  </Form>
-  
-                  <Row>
-                    <Col xs={1}></Col>
-                  </Row>
-                </Container>
-              </div>
-            </Col>
-          </Row>
-        </Container>
+                  </Form.Group>
+                </Form>
 
-      </div>
-    );
+                <Row>
+                  <Col xs={1}></Col>
+                </Row>
+              </Container>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </div>
+  );
 };
-  export default ListarAvances;
+export default ListarAvances;

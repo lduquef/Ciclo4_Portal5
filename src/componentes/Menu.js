@@ -43,14 +43,18 @@ const Menu = () => {
                 Usuarios
               </Nav.Link>
               <NavDropdown title="Proyectos" id="basic-nav-dropdown">
-                <NavDropdown.Item href="/crearSolicitud">
+                <NavDropdown.Item href="/listarProyectos">
+                  Base de proyectos
+                </NavDropdown.Item>
+                <NavDropdown.Item
+                  className={
+                    localStorage.getItem("rol") === "ESTUDIANTE"
+                      ? "visible"
+                      : "invisible"
+                  }
+                  href="/solicitudRegistro"
+                >
                   Crear Solicitud
-                </NavDropdown.Item>
-                <NavDropdown.Item href="/consultarSolicitudes">
-                  Historial Solicitudes
-                </NavDropdown.Item>
-                <NavDropdown.Item href="/listarAvancesProyecto">   
-                  Historial Avances
                 </NavDropdown.Item>
               </NavDropdown>
             </Nav>

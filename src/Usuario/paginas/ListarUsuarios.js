@@ -30,6 +30,25 @@ const ListarUsuarios = () => {
     `,
     });
   };
+
+  const queryListaUsuariosEstudiantes = () => {
+    return JSON.stringify({
+      query: `
+      query ListarUsuariosEstudiantes {
+        listarUsuariosEstudiantes {
+          _id
+          nombre
+          apellido
+          identificacion
+          correo
+          estado
+          rol
+        }
+      }
+    `,
+    });
+  };
+
   const mutacionActualizarUsuarioConsul = (
     id,
     nombre,
@@ -73,19 +92,27 @@ const ListarUsuarios = () => {
 
   useEffect(() => {
     async function fetchData() {
+      var consulta = "";
+      if (localStorage.getItem("rol") === "LIDER") {
+        consulta = queryListaUsuariosEstudiantes();
+      } else {
+        consulta = queryListaUsuarios();
+      }
       const config = {
         method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: queryListaUsuarios(),
+        body: consulta,
       };
       const response = await fetch("http://localhost:4000/graphql", config);
 
       const data = await response.json();
-      if (data) {
+      if (data.data.listarUsuarios) {
         setUsuario(data.data.listarUsuarios);
+      } else if (data.data.listarUsuariosEstudiantes) {
+        setUsuario(data.data.listarUsuariosEstudiantes);
       } else {
         alert("Sin resultados");
       }
@@ -113,7 +140,6 @@ const ListarUsuarios = () => {
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
-      console.log(data);
       if (data.data.actualizarUsuario) {
         setUsuario([]);
         popupExitoso("Actualización exitosa");
@@ -200,20 +226,11 @@ const ListarUsuarios = () => {
     });
   };
 
-  const habilitarCampo = () => {
-    const rol = localStorage.getItem("rol");
-    if (rol === "LIDER") {
-      return "true";
-    } else {
-      return "false";
-    }
-  };
-
   //Función para pintar la alerta color del estado de activación usuario
   const colorAlertaEstado = (estado) => {
     if (estado === "AUTORIZADO") {
       return "bg-success text-white";
-    } else if (estado === "NO AUTORIZADO") {
+    } else if (estado === "NO_AUTORIZADO") {
       return "bg-danger text-white";
     } else if (estado === "PENDIENTE") {
       return "bg-warning text-white";
@@ -227,8 +244,8 @@ const ListarUsuarios = () => {
         <Row>
           <Col xs={12}>
             <div className="row justify-content-center mt-4">
-              <h2>Lista de usuarios del listema</h2>
-              <Container className="mt-4">
+              <h2>Lista de usuarios del sistema</h2>
+              <Container className="mt-3">
                 <Form>
                   <Form.Group className="mb-3">
                     <table
@@ -336,7 +353,6 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.nombre || ""}
                 name="nombre"
                 onChange={handleChange}
-                //readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -346,7 +362,6 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.apellido || ""}
                 name="apellido"
                 onChange={handleChange}
-                readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -356,7 +371,6 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.correo || ""}
                 name="correo"
                 onChange={handleChange}
-                readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -366,7 +380,6 @@ const ListarUsuarios = () => {
                 value={UsuarioConsul.identificacion || ""}
                 name="identificacion"
                 onChange={handleChange}
-                readOnly={habilitarCampo}
               />
             </Form.Group>
             <Form.Group className="mb-2">
@@ -478,15 +491,11 @@ const ListarUsuarios = () => {
                 readOnly
               />
             </Form.Group>
-            ;
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseVisualizar}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleCloseVisualizar}>
-            Guardar
+            Cerrar
           </Button>
         </Modal.Footer>
       </Modal>

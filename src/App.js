@@ -156,7 +156,7 @@ function App() {
             }}
           />
 
-<Route
+          <Route
             path="/solicitudRegistro"
             exact
             render={() => {

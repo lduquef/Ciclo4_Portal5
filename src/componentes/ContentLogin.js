@@ -72,7 +72,6 @@ const Content = () => {
 
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
-      console.log(data);
       if (data.data.validarUsuario) {
         localStorage.setItem("estado", data.data.validarUsuario.estado);
         localStorage.setItem("rol", data.data.validarUsuario.rol);

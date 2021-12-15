@@ -12,6 +12,7 @@ import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
+import detalle from "../../img/aprobar.svg";
 import Swal from "sweetalert2";
 import { useHistory } from "react-router-dom";
 
@@ -88,12 +89,9 @@ const ListarProyectos = () => {
         }
       }
       `,
-      variables:
-        `
+      variables: `
       {
-        "idLider": "` +
-        idLider +
-        `"
+        "idLider": "${idLider}"
       }
       `,
     });
@@ -121,12 +119,9 @@ const ListarProyectos = () => {
       }
     }
     `,
-      variables:
-        `
+      variables: `
     {
-      "consultarProyectoId": "` +
-        id +
-        `"
+      "consultarProyectoId": "${id}"
     }
     `,
     });
@@ -154,11 +149,8 @@ const ListarProyectos = () => {
         }
       }
       `,
-      variables:
-        `{
-        "autorizaCreacionProyectoId": "` +
-        id +
-        `"
+      variables: `{
+        "autorizaCreacionProyectoId": "${id}"
         }
       `,
     });
@@ -192,25 +184,14 @@ const ListarProyectos = () => {
         }
       }
     `,
-      variables:
-        `
+      variables: `
         {
           "input": {
-            "_id": "` +
-        id +
-        `",
-            "nombre": "` +
-        nombre +
-        `",
-            "objetivosGenerales": "` +
-        objGen +
-        `",
-            "objetivosEspecificos": "` +
-        objEsp +
-        `",
-            "presupuesto": ` +
-        presupuesto +
-        `
+            "_id": "${id}",
+            "nombre": "${nombre}",
+            "objetivosGenerales": "${objGen}",
+            "objetivosEspecificos": "${objEsp}",
+            "presupuesto": ${presupuesto}
           }
         }
     `,
@@ -239,26 +220,19 @@ const ListarProyectos = () => {
         }
       }
     `,
-      variables:
-        `
+      variables: `
         {
           "input": {
-            "_id": "` +
-        id +
-        `",
-            "estado": "` +
-        estado +
-        `",
-            "fechaInicio": "` +
-        fechaInicio +
-        `"
+            "_id": "${id}",
+            "estado": "${estado}",
+            "fechaInicio": "${fechaInicio}"
           }
         }
     `,
     });
   };
 
-  const mutacionActualizarFaseProyectoSel = (id, fase) => {
+  const mutacionActualizarFaseProyectoSel = (id, fase, fechaFin) => {
     return JSON.stringify({
       query: `
       mutation ActualizarFaseProyecto($input: ActualizaFaseProyectoInput!) {
@@ -280,16 +254,12 @@ const ListarProyectos = () => {
         }
       }
     `,
-      variables:
-        `
+      variables: `
         {
           "input": {
-            "_id": "` +
-        id +
-        `",
-            "fase": "` +
-        fase +
-        `"
+            "_id": "${id}",
+            "fase": "${fase}",
+            "fechaFin": "${fechaFin}"
           }
         }
     `,
@@ -347,17 +317,21 @@ const ListarProyectos = () => {
       const data = await response.json();
       if (data.data.consultarProyecto) {
         setProyectoSel(data.data.consultarProyecto);
+        if (operacion === "ACTUALIZAR") handleShowActualizar();
+        if (operacion === "VISUALIZAR") handleShowVisualizar();
+        if (operacion === "AVANCES")
+          verAvances(data.data.consultarProyecto._id);
       } else {
         alert("Sin resultados");
       }
     }
     fetchData();
-    if (operacion === "ACTUALIZAR") handleShowActualizar();
-    if (operacion === "VISUALIZAR") handleShowVisualizar();
   };
 
   //Función para actualizar el proyecto seleccionado desde la pantalla modal
   const proyectoActualizar = (tipoActualizacion) => {
+    var dateParts = new Date().toLocaleDateString().split("/");
+    var fechaActual = dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0];
     var consulta = "";
     if (tipoActualizacion === "APROBACION") {
       consulta = mutacionAutorizaProyectoSel(proyectoSel._id);
@@ -372,20 +346,36 @@ const ListarProyectos = () => {
       );
     }
     if (tipoActualizacion === "ESTADO") {
-      consulta = mutacionActualizarEstadoProyectoSel(
-        proyectoSel._id,
-        proyectoSel.estado,
-        new Date().toLocaleDateString()
-      );
+      if (!proyectoSel.fechaInicio && proyectoSel.estado === "ACTIVO") {
+        consulta = mutacionActualizarEstadoProyectoSel(
+          proyectoSel._id,
+          proyectoSel.estado,
+          fechaActual
+        );
+      } else {
+        consulta = mutacionActualizarEstadoProyectoSel(
+          proyectoSel._id,
+          proyectoSel.estado,
+          proyectoSel.fechaInicio
+        );
+      }
     }
 
     if (tipoActualizacion === "FASE") {
-      consulta = mutacionActualizarFaseProyectoSel(
-        proyectoSel._id,
-        proyectoSel.fase
-      );
+      if (proyectoSel.fase === "TERMINADO") {
+        consulta = mutacionActualizarFaseProyectoSel(
+          proyectoSel._id,
+          proyectoSel.fase,
+          fechaActual
+        );
+      } else {
+        consulta = mutacionActualizarFaseProyectoSel(
+          proyectoSel._id,
+          proyectoSel.fase,
+          proyectoSel.fechaFin
+        );
+      }
     }
-
     async function fetchData() {
       const config = {
         method: "POST",
@@ -463,6 +453,23 @@ const ListarProyectos = () => {
     }
   };
 
+  //Función para ver avances y observaciones proyecto
+  const verAvances = (idProyecto) => {
+    history.push({
+      pathname: "/ListarAvancesProyecto",
+      state: { detail: idProyecto },
+    });
+  };
+
+  //Función para pintar la alerta color del estado de proyecto
+  const colorAlertaEstado = (estado) => {
+    if (estado === "ACTIVO") {
+      return "bg-success text-white";
+    } else if (estado === "INACTIVO") {
+      return "bg-danger text-white";
+    }
+  };
+
   // Return de componente a renderizar
   return (
     <div>
@@ -492,7 +499,7 @@ const ListarProyectos = () => {
                   <Form.Group className="mb-3">
                     <table
                       id="tbProyecto"
-                      className="table table-striped col-5 col-s-12"
+                      className="table table-striped col-4 col-s-12"
                     >
                       <thead>
                         <tr>
@@ -502,6 +509,7 @@ const ListarProyectos = () => {
                           <th scope="col">Fase</th>
                           <th scope="col">Estado</th>
                           <th scope="col">Fecha Inicio</th>
+                          <th scope="col">Fecha Fin</th>
                           <th scope="col">Presupuesto</th>
                           <th scope="col">Acción</th>
                         </tr>
@@ -520,8 +528,13 @@ const ListarProyectos = () => {
                                   : ""}
                               </td>
                               <td>{proyecto.fase}</td>
-                              <td>{proyecto.estado}</td>
+                              <td
+                                className={colorAlertaEstado(proyecto.estado)}
+                              >
+                                {proyecto.estado}
+                              </td>
                               <td>{proyecto.fechaInicio}</td>
+                              <td>{proyecto.fechaFin}</td>
                               <td>
                                 {moneyFormat
                                   .format(proyecto.presupuesto)
@@ -566,6 +579,25 @@ const ListarProyectos = () => {
                                         >
                                           <Image
                                             src={info}
+                                            rounded
+                                            id={proyecto._id}
+                                          />
+                                        </Button>
+                                      </td>
+
+                                      <td>
+                                        <Button
+                                          type="button"
+                                          className="btn btn-primary"
+                                          onClick={() =>
+                                            proyectoSeleccion(
+                                              proyecto._id,
+                                              "AVANCES"
+                                            )
+                                          }
+                                        >
+                                          <Image
+                                            src={detalle}
                                             rounded
                                             id={proyecto._id}
                                           />

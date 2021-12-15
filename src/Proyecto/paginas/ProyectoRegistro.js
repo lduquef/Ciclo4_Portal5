@@ -26,6 +26,7 @@ const ProyectoRegistro = () => {
     objEsp,
     presupuesto
   ) => {
+    console.log(nombre, idLider, objGen, objEsp, presupuesto);
     return JSON.stringify({
       query: `
       mutation CrearProyecto($input: CreaProyectoInput!) {
@@ -47,25 +48,14 @@ const ProyectoRegistro = () => {
         }
       }
     `,
-      variables:
-        `
+      variables: `
         {
           "input": {
-            "nombre": "` +
-        nombre +
-        `",
-            "idLider": "` +
-        idLider +
-        `",
-            "objetivosGenerales": "` +
-        objGen +
-        `",
-            "objetivosEspecificos": "` +
-        objEsp +
-        `",
-            "presupuesto": ` +
-        presupuesto +
-        `
+            "nombre": "${nombre}",
+            "idLider": "${idLider}",
+            "objetivosGenerales": "${objGen}",
+            "objetivosEspecificos": "${objEsp}",
+            "presupuesto": ${presupuesto}
           }
         }
     `,
@@ -97,6 +87,7 @@ const ProyectoRegistro = () => {
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
+      console.log(data);
       if (data.data.crearProyecto) {
         popupExitoso("Registro exitoso");
         setTimeout(function () {
