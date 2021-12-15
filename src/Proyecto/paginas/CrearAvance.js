@@ -1,17 +1,13 @@
-import {
-  Container,
-  Col,
-  Row,
-  Form,
-  FormControl,
-  Button,
-} from "react-bootstrap";
+import { Container, Col, Row, Form, Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Swal from "sweetalert2";
+import { useLocation } from "react-router-dom";
 
 const CrearAvances = () => {
   const history = useHistory();
+  const location = useLocation();
+  const idProyecto = location.state.detail;
 
   //hook para contener el avance a crear
   const [avance, setAvance] = useState([]);
@@ -35,29 +31,20 @@ const CrearAvances = () => {
             }
             estudiante {
               nombre
+              apellido
             }
             descripcion
             fechaAvance
           }
         }
       `,
-      variables:
-        `
-          {
-            "idProyecto":  "` +
-        idProyecto +
-        `",
-              "idEstudiante": "` +
-        idEstudiante +
-        `",
-              "descripcion": "` +
-        descripcion +
-        `",
-              "fechaAvance": "` +
-        fechaAvance +
-        `",
-            }
-          }
+      variables: `
+        {
+          "idProyecto": "${idProyecto}",
+          "idEstudiante": "${idEstudiante}",
+          "descripcion": "${descripcion}",
+          "fechaAvance": "${fechaAvance}"
+        }
       `,
     });
   };
@@ -68,41 +55,41 @@ const CrearAvances = () => {
 
   //Función crear nuevo avance
   const CrearAvance = () => {
-    // let idProyecto = localStorage.getItem("idProyecto")
-    // let idEstudiante =localStorage.getItem("idEstudiante")
-
+    var dateParts = new Date().toLocaleDateString().split("/");
+    var fechaActual = dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0];
     var consulta = mutacionCrearAvanceP(
-      avance.idProyecto,
-      avance.idEstudiante,
+      idProyecto,
+      localStorage.getItem("idUsuario"),
       avance.descripcion,
-      avance.fechaAvance
+      fechaActual
     );
 
-    useEffect(() => {
-      async function fetchData() {
-        const config = {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: consulta,
-        };
-        const response = await fetch("http://localhost:4000/graphql", config);
-        const data = await response.json();
-        console.log(data);
-        if (data.data.crearAvanceProyecto) {
-          popupExitoso("Avance exitoso");
-          setTimeout(function () {
-            history.push("/listarAvancesProyecto");
-          }, 3000);
-        }
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: consulta,
+      };
+      const response = await fetch("http://localhost:4000/graphql", config);
+      const data = await response.json();
+      console.log(data);
+      if (data.data.crearAvanceProyecto) {
+        popupExitoso("Avance exitoso");
+        setTimeout(function () {
+          history.push({
+            pathname: "/listarAvancesProyecto",
+            state: { detail: idProyecto },
+          });
+        }, 3000);
       }
-      validarCamposRequeridos();
-      if (validado) {
-        fetchData();
-      }
-    });
+    }
+    validarCamposRequeridos();
+    if (validado) {
+      fetchData();
+    }
   };
 
   //Función para validar los campos obligatorios del formulario
@@ -111,10 +98,6 @@ const CrearAvances = () => {
     validado = true;
     if (avance.descripcion === "") {
       popupFallido("La descripción del avance es requerida");
-      validado = false;
-    }
-    if (avance.fechaAvance === "") {
-      popupFallido("Es necesario indicar la fecha del avance");
       validado = false;
     }
   };
@@ -138,11 +121,7 @@ const CrearAvances = () => {
 
   //Función para registrar cambio en los campos del formulario
   const handleChange = (event) => {
-    setAvance({
-      ...avance,
-      [event.target.descripcion]: event.target.value,
-      [event.target.fechaAvance]: event.target.value,
-    });
+    setAvance({ ...avance, [event.target.name]: event.target.value });
   };
 
   // Return de componente formulario a renderizar
@@ -157,55 +136,17 @@ const CrearAvances = () => {
               <Container>
                 <Form>
                   <Form.Group className="mb-2">
-                    <Form.Label className="d-flex justify-content-start">
-                      Id Proyecto
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={avance.idProyecto || ""}
-                      name="idProyecto"
-                      //onChange={handleChange}
-                      readOnly="true"
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-2">
-                    <Form.Label className="d-flex justify-content-start">
-                      Id Estudiante
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={avance.idEstudiante || ""}
-                      name="idEstudiante"
-                      //onChange={handleChange}
-                      readOnly="true"
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-2">
                     <Form.Label>Descripción</Form.Label>
                     <Form.Control
                       as="textarea"
                       value={avance.descripcion || ""}
                       name="descripcion"
                       onChange={handleChange}
-                      rows="5"
+                      rows="10"
                     />
                   </Form.Group>
 
-                  <Form.Group className="mb-2">
-                    <Form.Label className="d-flex justify-content-start">
-                      Fecha Avance
-                    </Form.Label>
-                    <FormControl
-                      type="date"
-                      value={avance.fechaAvance || ""}
-                      name="fechaAvance"
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-
-                  <div className="form-group mt-2">
+                  <div className="form-group mt-5">
                     <Button btn btn-primary type="button" onClick={CrearAvance}>
                       Crear Avance
                     </Button>
