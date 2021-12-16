@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Container, Col, Row, Form } from "react-bootstrap";
 import Swal from "sweetalert2";
-
+import { useHistory } from "react-router-dom";
 
 const UsuarioActualizar = () => {
+  const history = useHistory();
+
   const [Usuario, setUsuario] = useState([]);
   const [UsuarioConsul, setUsuarioConsul] = useState([]);
-
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //QUERYS
@@ -75,7 +76,7 @@ const UsuarioActualizar = () => {
   ///////////////////////////////////////////////////////////////////////////////////////////
   //FUNCIONES
   //////////////////////////////////////////////////////////////////////////////////////////
-  
+
   useEffect(() => {
     async function fetchData() {
       const config = {
@@ -89,10 +90,9 @@ const UsuarioActualizar = () => {
       const response = await fetch("http://localhost:4000/graphql", config);
 
       const data = await response.json();
-      if (data) {
+      if (data.data.consultarUsuario) {
         setUsuario(data.data.consultarUsuario);
         setUsuarioConsul(Usuario);
-        popupExitoso("Actualización exitosa");
       } else {
         alert("Sin resultados");
       }
@@ -102,7 +102,7 @@ const UsuarioActualizar = () => {
 
   const ActualizarUsuario = () => {
     let idUsuario = localStorage.getItem("idUsuario");
-    async function fetchData2() {
+    async function fetchData() {
       const config = {
         method: "POST",
         headers: {
@@ -120,12 +120,12 @@ const UsuarioActualizar = () => {
         ),
       };
       const response = await fetch("http://localhost:4000/graphql", config);
-
       const data = await response.json();
-      console.log(data);
       if (data.data.actualizarUsuario) {
-        //setUsuario([]);
         popupExitoso("Actualización exitosa");
+        setTimeout(function () {
+          history.push("/home");
+        }, 3000);
       } else {
         alert("Sin resultados");
       }
@@ -133,8 +133,7 @@ const UsuarioActualizar = () => {
 
     validarCamposRequeridos();
     if (validado) {
-      fetchData2();
-      // handleCloseActualizar();
+      fetchData();
     }
   };
 
@@ -283,7 +282,7 @@ const UsuarioActualizar = () => {
 
                   <div className="form-group mt-2">
                     <button
-                      type="submit"
+                      type="button"
                       className="btn btn-primary btn-block"
                       onClick={ActualizarUsuario}
                     >

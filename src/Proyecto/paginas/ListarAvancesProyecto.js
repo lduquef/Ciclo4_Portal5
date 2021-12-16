@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
+import obs from "../../img/obs.svg";
 import { useHistory } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -54,6 +55,7 @@ const ListarAvances = () => {
             descripcion
             observaciones
             fechaAvance
+            fechaObservacion
           }
         }
             `,
@@ -196,7 +198,7 @@ const ListarAvances = () => {
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
-      console.log(data);
+
       if (data.data.consultarAvanceProyecto) {
         setAvanceSel(data.data.consultarAvanceProyecto);
         if (operacion === "ACTUALIZAR_AVANCE") {
@@ -229,7 +231,7 @@ const ListarAvances = () => {
     if (tipoActualizacion === "OBSERVACION") {
       consulta = mutacionActualizarObservacion(
         avanceSel._id,
-        avanceSel.observacion,
+        avanceSel.observaciones,
         fechaActual
       );
     }
@@ -245,7 +247,7 @@ const ListarAvances = () => {
       };
       const response = await fetch("http://localhost:4000/graphql", config);
       const data = await response.json();
-      console.log(data);
+
       if (
         data.data.actualizarAvanceProyecto ||
         data.data.actualizarObservacionProyecto
@@ -368,7 +370,12 @@ const ListarAvances = () => {
                                       <td>
                                         <Button
                                           type="button"
-                                          className="btn btn-primary"
+                                          className={
+                                            localStorage.getItem("rol") ===
+                                            "ESTUDIANTE"
+                                              ? "visible btn btn-primary"
+                                              : "invisible btn btn-primary"
+                                          }
                                           onClick={() =>
                                             avanceSeleccion(
                                               avance._id,
@@ -383,7 +390,12 @@ const ListarAvances = () => {
                                       <td>
                                         <Button
                                           type="button"
-                                          className="btn btn-primary"
+                                          className={
+                                            localStorage.getItem("rol") ===
+                                            "LIDER"
+                                              ? "visible btn btn-primary"
+                                              : "invisible btn btn-primary"
+                                          }
                                           onClick={() =>
                                             avanceSeleccion(
                                               avance._id,
@@ -391,7 +403,7 @@ const ListarAvances = () => {
                                             )
                                           }
                                         >
-                                          <Image src={editar} rounded />
+                                          <Image src={obs} rounded />
                                         </Button>
                                       </td>
 
@@ -550,7 +562,7 @@ const ListarAvances = () => {
                   <Form.Label>Observacion</Form.Label>
                   <Form.Control
                     as="textarea"
-                    placeholder={avanceSel.observacion}
+                    placeholder={avanceSel.observaciones}
                     readOnly
                     rows="10"
                   />

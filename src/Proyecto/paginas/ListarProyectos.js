@@ -362,6 +362,7 @@ const ListarProyectos = () => {
     }
 
     if (tipoActualizacion === "FASE") {
+
       if (proyectoSel.fase === "TERMINADO") {
         consulta = mutacionActualizarFaseProyectoSel(
           proyectoSel._id,
@@ -372,7 +373,7 @@ const ListarProyectos = () => {
         consulta = mutacionActualizarFaseProyectoSel(
           proyectoSel._id,
           proyectoSel.fase,
-          proyectoSel.fechaFin
+          fechaActual
         );
       }
     }

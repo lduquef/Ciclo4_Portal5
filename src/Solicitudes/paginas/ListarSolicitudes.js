@@ -4,43 +4,79 @@ import {
   Row,
   Form,
   Button,
-  //Modal,
-  //FormControl,
+  Modal,
+  FormControl,
 } from "react-bootstrap";
 
 import React, { useState, useEffect } from "react";
 import Image from "react-bootstrap/Image";
 import editar from "../../img/edit.svg";
 import info from "../../img/info.svg";
-//import Swal from "sweetalert2";
+import Swal from "sweetalert2";
 import { useHistory } from "react-router-dom";
 
 const ListarSolicitudes = () => {
   const history = useHistory();
+
   //hooks para actualizar lista de solicitudes, proyecto seleccionado
   const [solicitudes, setSolicitudes] = useState([]);
-  //const [solicitudSel, setSolicitudSel] = useState([]);
+  const [solicitudSel, setSolicitudSel] = useState({
+    estado: "",
+    fechaIngreso: "",
+    fechaEgreso: "",
+    proyecto: { nombre: "" },
+    estudiante: { nombre: "", apellido: "" },
+  });
 
-  // // funciones visibilidad de las pantallas modales
-  // const [showActualizar, setShowActualizar] = useState(false);
-  // const [showVisualizar, setShowVisualizar] = useState(false);
+  //hook para contener la lista de proyectos disponibles
+  const [proyectos, setProyectos] = useState([]);
 
-  // const handleShowActualizar = () => {
-  //   setShowActualizar(true);
-  // };
-  // const handleCloseActualizar = () => {
-  //   setShowActualizar(false);
-  // };
-  // const handleShowVisualizar = () => {
-  //   setShowVisualizar(true);
-  // };
-  // const handleCloseVisualizar = () => {
-  //   setShowVisualizar(false);
-  // };
+  // funciones visibilidad de las pantallas modales
+  const [showActualizar, setShowActualizar] = useState(false);
+  const [showVisualizar, setShowVisualizar] = useState(false);
+
+  const handleShowActualizar = () => {
+    setShowActualizar(true);
+  };
+  const handleCloseActualizar = () => {
+    setShowActualizar(false);
+  };
+  const handleShowVisualizar = () => {
+    setShowVisualizar(true);
+  };
+  const handleCloseVisualizar = () => {
+    setShowVisualizar(false);
+  };
 
   ///////////////////////////////////////////////////////////////////////////////////////////
   //QUERYS
   //////////////////////////////////////////////////////////////////////////////////////////
+
+  const queryListaProyectos = () => {
+    return JSON.stringify({
+      query: `
+      query listarProyectos {
+        listarProyectos {
+          _id
+          nombre
+          presupuesto
+          fechaInicio
+          fechaFin
+          estado
+          fase
+          objetivosGenerales
+          objetivosEspecificos
+          apruebaCreacion
+          lider {
+            nombre
+            apellido
+          }
+        }
+      }
+    `,
+    });
+  };
+
   const queryListaSolicitudes = () => {
     return JSON.stringify({
       query: `
@@ -64,235 +100,61 @@ const ListarSolicitudes = () => {
     });
   };
 
-  // const queryconsultaProyectosLider = (idLider) => {
-  //   return JSON.stringify({
-  //     query: `
-  //     query ConsultarProyectosLider($idLider: ID!) {
-  //     consultarProyectosLider(idLider: $idLider) {
-  //         _id
-  //         nombre
-  //         presupuesto
-  //         fechaInicio
-  //         fechaFin
-  //         estado
-  //         fase
-  //         lider {
-  //           nombre
-  //           apellido
-  //         }
-  //         objetivosGenerales
-  //         objetivosEspecificos
-  //         apruebaCreacion
-  //       }
-  //     }
-  //     `,
-  //     variables:
-  //       `
-  //     {
-  //       "idLider": "` +
-  //       idLider +
-  //       `"
-  //     }
-  //     `,
-  //   });
-  // };
+  const querySolicitudSel = (id) => {
+    return JSON.stringify({
+      query: `
+      query ConsultarSolicitud($consultarSolicitudId: ID!) {
+        consultarSolicitud(id: $consultarSolicitudId) {
+          _id
+          estado
+          fechaIngreso
+          fechaEgreso
+          proyecto {
+            nombre
+          }
+          estudiante {
+            nombre
+            apellido
+          }
+        }
+      }
+      `,
+      variables: `
+        {
+          "consultarSolicitudId": "${id}"
+        }
+        `,
+    });
+  };
 
-  // const queryProyectoSel = (id) => {
-  //   return JSON.stringify({
-  //     query: `
-  //   query ConsultarProyecto($consultarProyectoId: ID!) {
-  //     consultarProyecto(id: $consultarProyectoId) {
-  //       _id
-  //       nombre
-  //       presupuesto
-  //       fechaInicio
-  //       fechaFin
-  //       estado
-  //       fase
-  //       lider {
-  //         nombre
-  //         apellido
-  //       }
-  //       objetivosGenerales
-  //       objetivosEspecificos
-  //       apruebaCreacion
-  //     }
-  //   }
-  //   `,
-  //     variables:
-  //       `
-  //   {
-  //     "consultarProyectoId": "` +
-  //       id +
-  //       `"
-  //   }
-  //   `,
-  //   });
-  // };
+  const mutacionActualizarSolicitud = (id, estado) => {
+    return JSON.stringify({
+      query: `
+      mutation ActualizarEstadoSolicitud($id: String!, $estado: String!) {
+        actualizarEstadoSolicitud(_id: $id, estado: $estado) {
+          _id
+          estado
+          fechaIngreso
+          fechaEgreso
+          proyecto {
+            nombre
+          }
+          estudiante {
+            nombre
+            apellido
+          }
+        }
+      }
+      `,
+      variables: `
+      {
+        "id": "${id}",
+        "estado": "${estado}"
+      }
+      `,
+    });
+  };
 
-  // const mutacionAutorizaProyectoSel = (id) => {
-  //   return JSON.stringify({
-  //     query: `
-  //     mutation AutorizaCreacionProyecto($autorizaCreacionProyectoId: ID!) {
-  //       autorizaCreacionProyecto(id: $autorizaCreacionProyectoId) {
-  //         _id
-  //         nombre
-  //         presupuesto
-  //         fechaInicio
-  //         fechaFin
-  //         estado
-  //         fase
-  //         lider {
-  //           nombre
-  //           apellido
-  //         }
-  //         objetivosGenerales
-  //         objetivosEspecificos
-  //         apruebaCreacion
-  //       }
-  //     }
-  //     `,
-  //     variables:
-  //       `{
-  //       "autorizaCreacionProyectoId": "` +
-  //       id +
-  //       `"
-  //       }
-  //     `,
-  //   });
-  // };
-
-  // const mutacionActualizarProyectoSel = (
-  //   id,
-  //   nombre,
-  //   objGen,
-  //   objEsp,
-  //   presupuesto
-  // ) => {
-  //   return JSON.stringify({
-  //     query: `
-  //     mutation ActualizarProyecto($input: ActualizaProyectoInput!) {
-  //       actualizarProyecto(input: $input) {
-  //         _id
-  //         nombre
-  //         presupuesto
-  //         fechaInicio
-  //         fechaFin
-  //         estado
-  //         fase
-  //         lider {
-  //           nombre
-  //           apellido
-  //         }
-  //         objetivosGenerales
-  //         objetivosEspecificos
-  //         apruebaCreacion
-  //       }
-  //     }
-  //   `,
-  //     variables:
-  //       `
-  //       {
-  //         "input": {
-  //           "_id": "` +
-  //       id +
-  //       `",
-  //           "nombre": "` +
-  //       nombre +
-  //       `",
-  //           "objetivosGenerales": "` +
-  //       objGen +
-  //       `",
-  //           "objetivosEspecificos": "` +
-  //       objEsp +
-  //       `",
-  //           "presupuesto": ` +
-  //       presupuesto +
-  //       `
-  //         }
-  //       }
-  //   `,
-  //   });
-  // };
-
-  // const mutacionActualizarEstadoProyectoSel = (id, estado, fechaInicio) => {
-  //   return JSON.stringify({
-  //     query: `
-  //     mutation ActualizarEstadoProyecto($input: ActualizaEstadoProyectoInput!) {
-  //     actualizarEstadoProyecto(input: $input) {
-  //         _id
-  //         nombre
-  //         presupuesto
-  //         fechaInicio
-  //         fechaFin
-  //         estado
-  //         fase
-  //         lider {
-  //           nombre
-  //           apellido
-  //         }
-  //         objetivosGenerales
-  //         objetivosEspecificos
-  //         apruebaCreacion
-  //       }
-  //     }
-  //   `,
-  //     variables:
-  //       `
-  //       {
-  //         "input": {
-  //           "_id": "` +
-  //       id +
-  //       `",
-  //           "estado": "` +
-  //       estado +
-  //       `",
-  //           "fechaInicio": "` +
-  //       fechaInicio +
-  //       `"
-  //         }
-  //       }
-  //   `,
-  //   });
-  // };
-
-  // const mutacionActualizarFaseProyectoSel = (id, fase) => {
-  //   return JSON.stringify({
-  //     query: `
-  //     mutation ActualizarFaseProyecto($input: ActualizaFaseProyectoInput!) {
-  //     actualizarFaseProyecto(input: $input) {
-  //         _id
-  //         nombre
-  //         presupuesto
-  //         fechaInicio
-  //         fechaFin
-  //         estado
-  //         fase
-  //         lider {
-  //           nombre
-  //           apellido
-  //         }
-  //         objetivosGenerales
-  //         objetivosEspecificos
-  //         apruebaCreacion
-  //       }
-  //     }
-  //   `,
-  //     variables:
-  //       `
-  //       {
-  //         "input": {
-  //           "_id": "` +
-  //       id +
-  //       `",
-  //           "fase": "` +
-  //       fase +
-  //       `"
-  //         }
-  //       }
-  //   `,
-  //   });
-  // };
   ///////////////////////////////////////////////////////////////////////////////////////////
   //FUNCIONES
   //////////////////////////////////////////////////////////////////////////////////////////
@@ -319,128 +181,142 @@ const ListarSolicitudes = () => {
       }
     }
     if (solicitudes.length === 0) fetchData();
+    if (proyectos.length === 0) listarProyectosActivos();
   });
 
-  // //Función para consultar el proyecto a partir de la selección del registro desde la tabla
-  // const solicitudSeleccion = (id, operacion) => {
-  //   async function fetchData() {
-  //     const config = {
-  //       method: "POST",
-  //       headers: {
-  //         Accept: "application/json",
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: queryProyectoSel(id),
-  //     };
-  //     const response = await fetch("http://localhost:4000/graphql", config);
-  //     const data = await response.json();
-  //     if (data.data.consultarProyecto) {
-  //       setSolicitudSel(data.data.consultarProyecto);
-  //     } else {
-  //       alert("Sin resultados");
-  //     }
-  //   }
-  //   fetchData();
-  //   if (operacion === "ACTUALIZAR") handleShowActualizar();
-  //   if (operacion === "VISUALIZAR") handleShowVisualizar();
-  // };
+  //Función para listar proyectos activos
+  const listarProyectosActivos = () => {
+    var consulta = queryListaProyectos();
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: consulta,
+      };
+      const response = await fetch("http://localhost:4000/graphql", config);
+      const data = await response.json();
+      if (data.data.listarProyectos) {
+        setProyectos(data.data.listarProyectos);
+      } else {
+        popupFallido("Sin resultados consulta proyectos");
+      }
+    }
+    fetchData();
+  };
 
-  // //Función para actualizar el proyecto seleccionado desde la pantalla modal
-  // const proyectoActualizar = (tipoActualizacion) => {
-  //   var consulta = "";
-  //   if (tipoActualizacion === "APROBACION") {
-  //     consulta = mutacionAutorizaProyectoSel(solicitudSel._id);
-  //   }
-  //   if (tipoActualizacion === "ACTUALIZACION") {
-  //     consulta = mutacionActualizarProyectoSel(
-  //       solicitudSel._id,
-  //       solicitudSel.nombre,
-  //       solicitudSel.objetivosGenerales,
-  //       solicitudSel.objetivosEspecificos,
-  //       solicitudSel.presupuesto
-  //     );
-  //   }
-  //   if (tipoActualizacion === "ESTADO") {
-  //     consulta = mutacionActualizarEstadoProyectoSel(
-  //       solicitudSel._id,
-  //       solicitudSel.estado,
-  //       new Date().toLocaleDateString()
-  //     );
-  //   }
+  //Función para consultar la solicitud a partir de la selección del registro desde la tabla
+  const solicitudSeleccion = (id, operacion) => {
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: querySolicitudSel(id),
+      };
+      const response = await fetch("http://localhost:4000/graphql", config);
+      const data = await response.json();
+      if (data.data.consultarSolicitud) {
+        setSolicitudSel(data.data.consultarSolicitud);
+        if (operacion === "ACTUALIZAR") handleShowActualizar();
+        if (operacion === "VISUALIZAR") handleShowVisualizar();
+      } else {
+        alert("Sin resultados");
+      }
+    }
+    fetchData();
+  };
 
-  //   if (tipoActualizacion === "FASE") {
-  //     consulta = mutacionActualizarFaseProyectoSel(
-  //       solicitudSel._id,
-  //       solicitudSel.fase
-  //     );
-  //   }
+  //Función para actualizar la solicitud seleccionada desde la pantalla modal
+  const solicitudActualizar = () => {
+    var consulta = "";
+    // var dateParts = new Date().toLocaleDateString().split("/");
+    // var fechaActual = dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0];
 
-  //   async function fetchData() {
-  //     const config = {
-  //       method: "POST",
-  //       headers: {
-  //         Accept: "application/json",
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: consulta,
-  //     };
-  //     const response = await fetch("http://localhost:4000/graphql", config);
-  //     const data = await response.json();
-  //     if (
-  //       data.data.autorizaCreacionProyecto ||
-  //       data.data.actualizarProyecto ||
-  //       data.data.actualizarEstadoProyecto ||
-  //       data.data.actualizarFaseProyecto
-  //     ) {
-  //       setSolicitudes([]);
-  //       popupExitoso("Actualización exitosa");
-  //     }
-  //   }
-  //   validarCamposRequeridos();
-  //   if (validado) {
-  //     fetchData();
-  //     handleCloseActualizar();
-  //   }
-  // };
-  //
-  // //Función para validar los campos obligatorios del formulario
-  // var validado = false;
-  // const validarCamposRequeridos = () => {
-  //   validado = true;
-  //   if (solicitudSel.nombre === "") {
-  //     popupFallido("El nombre de proyecto es requerido");
-  //     validado = false;
-  //   }
-  //   if (solicitudSel.presupuesto === "") {
-  //     popupFallido("El valor de presupuesto es requerido");
-  //     validado = false;
-  //   }
-  // };
+    consulta = mutacionActualizarSolicitud(
+      solicitudSel._id,
+      solicitudSel.estado
+    );
 
-  // //Funciones para generar popup confirmación de exito o falla de operación
-  // const popupExitoso = (msg) => {
-  //   Swal.fire({
-  //     title: "Operación Exitosa",
-  //     text: msg,
-  //     type: "success",
-  //   });
-  // };
+    async function fetchData() {
+      const config = {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: consulta,
+      };
+      const response = await fetch("http://localhost:4000/graphql", config);
+      const data = await response.json();
+      if (data.data.actualizarEstadoSolicitud) {
+        setSolicitudes([]);
+        popupExitoso("Actualización exitosa");
+      }
+    }
+    validarCamposRequeridos();
+    if (validado) {
+      fetchData();
+      handleCloseActualizar();
+    }
+  };
 
-  // const popupFallido = (msg) => {
-  //   Swal.fire({
-  //     title: "Operación fallida",
-  //     text: msg,
-  //     type: "warning",
-  //   });
-  // };
+  //Función para validar los campos obligatorios del formulario
+  var validado = false;
+  const validarCamposRequeridos = () => {
+    validado = true;
+    if (solicitudSel.estado === "") {
+      popupFallido("El campo estado es requerido");
+      validado = false;
+    }
+  };
 
-  // //Función para registrar cambio en los campos del formulario
-  // const handleChange = (event) => {
-  //   setSolicitudSel({
-  //     ...solicitudSel,
-  //     [event.target.name]: event.target.value,
-  //   });
-  // };
+  //Funciones para generar popup confirmación de exito o falla de operación
+  const popupExitoso = (msg) => {
+    Swal.fire({
+      title: "Operación Exitosa",
+      text: msg,
+      type: "success",
+    });
+  };
+
+  const popupFallido = (msg) => {
+    Swal.fire({
+      title: "Operación fallida",
+      text: msg,
+      type: "warning",
+    });
+  };
+
+  //Función para registrar cambio en los campos del formulario
+  const handleChange = (event) => {
+    setSolicitudSel({
+      ...solicitudSel,
+      [event.target.name]: event.target.value,
+    });
+  };
+  //Función para registrar cambio en la lista de proyectos del formulario
+  const handleChangeProyecto = (event) => {
+    const index = event.target.selectedIndex;
+    const optionElement = event.target.childNodes[index];
+    const optionElementId = optionElement.getAttribute("id");
+    setSolicitudSel({ ...solicitudSel, proyecto: optionElementId });
+  };
+
+  //Función para pintar la alerta color del estado de activación usuario
+  const colorAlertaEstado = (estado) => {
+    if (estado === "ACEPTADA") {
+      return "bg-success text-white";
+    } else if (estado === "RECHAZADA") {
+      return "bg-danger text-white";
+    } else if (estado === "PENDIENTE") {
+      return "bg-warning text-white";
+    }
+  };
 
   // Return de componente a renderizar
   return (
@@ -480,7 +356,6 @@ const ListarSolicitudes = () => {
                           <th scope="col">Nombre Proyecto</th>
                           <th scope="col">Estado</th>
                           <th scope="col">Fecha ingreso</th>
-                          <th scope="col">Fecha egreso</th>
                           <th scope="col">Acción</th>
                         </tr>
                       </thead>
@@ -497,9 +372,12 @@ const ListarSolicitudes = () => {
                                   : ""}
                               </td>
                               <td>{solicitud.proyecto.nombre}</td>
-                              <td>{solicitud.estado}</td>
+                              <td
+                                className={colorAlertaEstado(solicitud.estado)}
+                              >
+                                {solicitud.estado}
+                              </td>
                               <td>{solicitud.fechaIngreso}</td>
-                              <td>{solicitud.fechaEgreso}</td>
                               <td>
                                 <table className="table col-5 col-s-12">
                                   <thead></thead>
@@ -508,14 +386,20 @@ const ListarSolicitudes = () => {
                                       <td>
                                         <Button
                                           type="button"
-                                          className="btn btn-primary"
-                                          onClick={null}
+                                          className={
+                                            localStorage.getItem("rol") ===
+                                            "LIDER"
+                                              ? "visible btn btn-primary"
+                                              : "invisible btn btn-primary"
+                                          }
+                                          onClick={() =>
+                                            solicitudSeleccion(
+                                              solicitud._id,
+                                              "ACTUALIZAR"
+                                            )
+                                          }
                                         >
-                                          <Image
-                                            src={editar}
-                                            rounded
-                                            id={solicitud._id}
-                                          />
+                                          <Image src={editar} rounded />
                                         </Button>
                                       </td>
 
@@ -523,13 +407,14 @@ const ListarSolicitudes = () => {
                                         <Button
                                           type="button"
                                           className="btn btn-primary"
-                                          onClick={null}
+                                          onClick={() =>
+                                            solicitudSeleccion(
+                                              solicitud._id,
+                                              "VISUALIZAR"
+                                            )
+                                          }
                                         >
-                                          <Image
-                                            src={info}
-                                            rounded
-                                            id={solicitud._id}
-                                          />
+                                          <Image src={info} rounded />
                                         </Button>
                                       </td>
                                     </tr>
@@ -553,7 +438,7 @@ const ListarSolicitudes = () => {
         </Row>
       </Container>
 
-      {/* <Modal
+      <Modal
         name="ModalActualizar"
         className="modal-dialog-scrollable"
         show={showActualizar}
@@ -561,179 +446,77 @@ const ListarSolicitudes = () => {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Actualizar proyecto</Modal.Title>
+          <Modal.Title>Actualizar solicitud</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-            <Container fluid>
-              <Modal.Title>Aprobacion proyecto</Modal.Title>
-              <Row>
-                <Form.Group className="mb-2">
-                  <div className="row">
-                    <Form.Label className="col-md-3">
-                      Aprobación creación
-                    </Form.Label>
-                    <Form.Check
-                      className="col-md-9 ms-auto"
-                      aria-label="option 1"
-                      name="apruebaCreacion"
-                      value={solicitudSel.apruebaCreacion}
-                      onChange={handleChangeAprueba}
-                      defaultChecked={solicitudSel.apruebaCreacion}
-                    />
-                  </div>
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      proyectoActualizar("APROBACION");
-                    }}
-                    disabled={solicitudSel.apruebaCreacion ? true : false}
-                  >
-                    Aprobar
-                  </Button>
-                </Form.Group>
-              </Row>
-            </Container>
+          <Container fluid className="mt-3">
+            <Form>
+              <Form.Group className="mb-2">
+                <Form.Label className="d-flex justify-content-start">
+                  Proyecto
+                </Form.Label>
+                <Form.Select
+                  value={solicitudSel.proyecto.nombre}
+                  size="lg"
+                  name="proyecto"
+                  onChange={handleChangeProyecto}
+                  disabled
+                >
+                  <option></option>
+                  {proyectos.map((proy, index) => {
+                    return (
+                      <option key={index} id={proy._id}>
+                        {proy.nombre}
+                      </option>
+                    );
+                  })}
+                </Form.Select>
+              </Form.Group>
 
-            <Container fluid className="mt-5">
-              <Modal.Title>Formulación proyecto</Modal.Title>
-              <Row>
-                <Form.Group className="mb-2">
-                  <Form.Label>Nombre proyecto</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={solicitudSel.nombre || ""}
-                    name="nombre"
-                    onChange={handleChange}
-                  />
-                </Form.Group>
+              <Form.Group className="mb-2">
+                <Form.Label className="d-flex justify-content-start">
+                  Estudiante
+                </Form.Label>
+                <FormControl
+                  type="text"
+                  value={
+                    solicitudSel.estudiante.nombre +
+                    " " +
+                    solicitudSel.estudiante.apellido
+                  }
+                  placeholder={
+                    solicitudSel.estudiante.nombre +
+                      " " +
+                      solicitudSel.estudiante.apellido || ""
+                  }
+                  readOnly
+                />
+              </Form.Group>
 
-                <Form.Group className="mb-2">
-                  <Form.Label>Nombre lider</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder={
-                      solicitudSel.lider
-                        ? solicitudSel.lider.nombre +
-                          " " +
-                          solicitudSel.lider.apellido
-                        : ""
-                    }
-                    readOnly
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-2">
-                  <Form.Label>Fecha Inicio</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={solicitudSel.fechaInicio || ""}
-                    readOnly
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-2">
-                  <Form.Label>Presupesto (pesos $ COP)</Form.Label>
-                  <Form.Control
-                    type="Number"
-                    value={solicitudSel.presupuesto || 0}
-                    name="presupuesto"
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-2">
-                  <Form.Label>Objetivos generales</Form.Label>
-                  <FormControl
-                    as="textarea"
-                    value={solicitudSel.objetivosGenerales || ""}
-                    name="objetivosGenerales"
-                    onChange={handleChange}
-                    rows="5"
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-2">
-                  <Form.Label>Objetivos específicos</Form.Label>
-                  <FormControl
-                    as="textarea"
-                    value={solicitudSel.objetivosEspecificos || ""}
-                    name="objetivosEspecificos"
-                    onChange={handleChange}
-                    rows="5"
-                  />
-                </Form.Group>
-              </Row>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  proyectoActualizar("ACTUALIZACION");
-                }}
-                disabled={solicitudSel.apruebaCreacion ? false : true}
-              >
-                Guardar
-              </Button>
-            </Container>
-
-            <Container fluid className="mt-5">
-              <Modal.Title>Actualizar estado</Modal.Title>
-              <Row>
-                <Form.Group className="mb-2">
-                  <Form.Label>Estado</Form.Label>
-                  <Form.Select
-                    size="lg"
-                    name="estado"
-                    value={solicitudSel.estado || ""}
-                    onChange={handleChange}
-                  >
-                    <option>ACTIVO</option>
-                    <option>INACTIVO</option>
-                  </Form.Select>
-                </Form.Group>
-              </Row>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  proyectoActualizar("ESTADO");
-                }}
-                disabled={solicitudSel.apruebaCreacion ? false : true}
-              >
-                Guardar
-              </Button>
-            </Container>
-
-            <Container fluid className="mt-5">
-              <Modal.Title>Actualizar fase</Modal.Title>
-              <Row>
-                <Form.Group className="mb-2">
-                  <Form.Label>Fase</Form.Label>
-                  <Form.Select
-                    size="lg"
-                    name="fase"
-                    value={solicitudSel.fase || ""}
-                    onChange={handleChange}
-                  >
-                    <option>INICIADO</option>
-                    <option>EN_DESARROLLO</option>
-                    <option>TERMINADO</option>
-                  </Form.Select>
-                </Form.Group>
-              </Row>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  proyectoActualizar("FASE");
-                }}
-                disabled={solicitudSel.apruebaCreacion ? false : true}
-              >
-                Guardar
-              </Button>
-            </Container>
-          </Form>
+              <Form.Group className="mb-2">
+                <Form.Label className="d-flex justify-content-start">
+                  Estado
+                </Form.Label>
+                <Form.Select
+                  size="lg"
+                  name="estado"
+                  value={solicitudSel.estado || ""}
+                  onChange={handleChange}
+                >
+                  <option>PENDIENTE</option>
+                  <option>RECHAZADA</option>
+                  <option>ACEPTADA</option>
+                </Form.Select>
+              </Form.Group>
+            </Form>
+          </Container>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseActualizar}>
             Cancelar
+          </Button>
+          <Button variant="primary" onClick={solicitudActualizar}>
+            Guardar
           </Button>
         </Modal.Footer>
       </Modal>
@@ -750,83 +533,40 @@ const ListarSolicitudes = () => {
         <Modal.Body>
           <Form>
             <Form.Group className="mb-2">
-              <Form.Label>Nombre proyecto</Form.Label>
-              <Form.Control placeholder={solicitudSel.nombre || ""} readOnly />
+              <Form.Label className="d-flex justify-content-start">
+                Proyecto
+              </Form.Label>
+              <FormControl
+                type="text"
+                placeholder={solicitudSel.proyecto.nombre}
+                readOnly
+              />
             </Form.Group>
 
             <Form.Group className="mb-2">
-              <Form.Label>Nombre lider</Form.Label>
-              <Form.Control
+              <Form.Label className="d-flex justify-content-start">
+                Estudiante
+              </Form.Label>
+              <FormControl
                 type="text"
                 placeholder={
-                  solicitudSel.lider
-                    ? solicitudSel.lider.nombre +
-                      " " +
-                      solicitudSel.lider.apellido
-                    : ""
+                  solicitudSel.estudiante.nombre +
+                    " " +
+                    solicitudSel.estudiante.apellido || ""
                 }
                 readOnly
               />
             </Form.Group>
 
             <Form.Group className="mb-2">
-              <Form.Label>Estado</Form.Label>
-              <Form.Control placeholder={solicitudSel.estado || ""} readOnly />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Fase</Form.Label>
-              <Form.Control placeholder={solicitudSel.fase || ""} readOnly />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Fecha Inicio</Form.Label>
-              <Form.Control
-                placeholder={solicitudSel.fechaInicio || ""}
-                readOnly
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Presupesto (pesos $ COP)</Form.Label>
-              <Form.Control
-                placeholder={solicitudSel.presupuesto || 0}
-                readOnly
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Objetivos generales</Form.Label>
+              <Form.Label className="d-flex justify-content-start">
+                Estado
+              </Form.Label>
               <FormControl
-                as="textarea"
-                placeholder={solicitudSel.objetivosGenerales || ""}
-                rows="5"
+                type="text"
+                placeholder={solicitudSel.estado}
                 readOnly
               />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <Form.Label>Objetivos específicos</Form.Label>
-              <FormControl
-                as="textarea"
-                placeholder={solicitudSel.objetivosEspecificos || ""}
-                rows="5"
-                readOnly
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-2">
-              <div className="row">
-                <Form.Label className="col-md-3">Aprueba creación</Form.Label>
-                <Form.Check
-                  className="col-md-9 ms-auto"
-                  aria-label="option 1"
-                  name="apruebaCreacion"
-                  value={solicitudSel.apruebaCreacion}
-                  defaultChecked={solicitudSel.apruebaCreacion}
-                  disabled
-                />
-              </div>
             </Form.Group>
           </Form>
         </Modal.Body>
@@ -835,7 +575,7 @@ const ListarSolicitudes = () => {
             Cerrar
           </Button>
         </Modal.Footer>
-      </Modal> */}
+      </Modal>
     </div>
   );
 };
